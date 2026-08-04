@@ -54,46 +54,55 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-
 const plans = [
   {
-    name: "Starter",
+    name: "💎 Elite Starter",
     price: "9,99",
     features: ["Download liberado", "Atualizações", "Suporte básico"],
-    cta: "Comprar Agora",
+    cta: "💎 COMPRAR AGORA",
     badge: null as string | null,
     highlight: false,
     vip: false,
   },
   {
-    name: "Premium",
+    name: "🔥 Elite Premium",
     price: "14,90",
     features: [
-      "Tudo do Starter",
+      "Tudo do Elite Starter",
       "Prioridade no suporte",
       "Atualizações rápidas",
       "Melhor custo-benefício",
     ],
-    cta: "Comprar Agora",
+    cta: "💎 COMPRAR AGORA",
     badge: "MAIS VENDIDO",
     highlight: true,
     vip: false,
   },
   {
-    name: "Ultimate VIP",
+    name: "👑 Elite VIP",
     price: "29,90",
     features: [
-      "Tudo do Premium",
+      "Tudo do Elite Premium",
       "Acesso prioritário",
       "Benefícios exclusivos",
       "Melhor experiência",
     ],
-    cta: "Virar VIP",
+    cta: "💎 COMPRAR AGORA",
     badge: "VIP",
     highlight: false,
     vip: true,
   },
 ];
+
+const exclusiveVideos = [
+  { title: "Configuração Elite completa", duration: "12:40", tint: "26.5" },
+  { title: "Ajustes avançados de estabilidade", duration: "08:15", tint: "14" },
+  { title: "Otimização para celulares", duration: "10:02", tint: "40" },
+  { title: "Atualizações e manutenção", duration: "06:33", tint: "5" },
+  { title: "Suporte VIP: passo a passo", duration: "15:21", tint: "32" },
+  { title: "Recursos exclusivos Elite", duration: "09:47", tint: "20" },
+];
+
 
 const reviews = [
   { text: "Funcionou perfeitamente.", author: "Lucas M." },
