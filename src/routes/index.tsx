@@ -152,8 +152,86 @@ function Stars() {
   );
 }
 
+function LockedVideoModal({
+  video,
+  onClose,
+}: {
+  video: (typeof exclusiveVideos)[number] | null;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    if (!video) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [video, onClose]);
+
+  if (!video) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center px-5"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Conteúdo exclusivo"
+    >
+      <button
+        type="button"
+        aria-label="Fechar"
+        onClick={onClose}
+        className="absolute inset-0 cursor-default bg-black/70 backdrop-blur-sm"
+        style={{ animation: "fade-in 0.25s ease-out" }}
+      />
+      <div
+        className="glass relative w-[min(460px,100%)] rounded-3xl p-8 text-center"
+        style={{
+          boxShadow: "var(--shadow-glow), var(--shadow-elegant)",
+          animation: "scale-in 0.28s cubic-bezier(0.16,1,0.3,1)",
+        }}
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Fechar"
+          className="absolute right-4 top-4 grid size-9 place-items-center rounded-xl text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <X size={18} />
+        </button>
+        <span
+          className="mx-auto grid size-14 place-items-center rounded-2xl"
+          style={{ background: "var(--gradient-primary)" }}
+        >
+          <Lock size={22} className="text-primary-foreground" />
+        </span>
+        <h3 className="mt-5 font-display text-xl font-bold">Conteúdo exclusivo</h3>
+        <p className="mt-3 text-sm text-muted-foreground">
+          “{video.title}” está disponível apenas para assinantes. Escolha um plano para liberar
+          todo o conteúdo Elite.
+        </p>
+        <a
+          href="#planos"
+          onClick={onClose}
+          className="glow-hover mt-7 inline-flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 font-display text-sm font-bold text-primary-foreground"
+          style={{ background: "var(--gradient-primary)" }}
+        >
+          <Gem size={16} />
+          Ver Planos
+        </a>
+      </div>
+    </div>
+  );
+}
+
 function Index() {
   const [open, setOpen] = useState<number | null>(0);
+  const [lockedVideo, setLockedVideo] = useState<(typeof exclusiveVideos)[number] | null>(null);
+
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-background">
