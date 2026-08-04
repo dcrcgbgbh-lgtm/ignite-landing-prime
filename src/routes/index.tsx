@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Zap,
   ShieldCheck,
@@ -8,7 +8,6 @@ import {
   Globe2,
   Heart,
   Star,
-  Download,
   Crown,
   Flame,
   Check,
@@ -17,6 +16,10 @@ import {
   Youtube,
   Twitter,
   MessageCircle,
+  Lock,
+  Play,
+  X,
+  Rocket,
 } from "lucide-react";
 import heroImg from "@/assets/hero.jpg";
 import { Particles } from "@/components/site/Particles";
@@ -32,22 +35,25 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Download Free Fire 2022 Premium | Rápido e Seguro" },
+      { title: "FF 2022 Elite | Software Estável, Atualizado e Completo" },
       {
         name: "description",
         content:
-          "Baixe o Free Fire 2022 Premium com acesso imediato, servidores rápidos e download 100% seguro. Planos a partir de R$ 9,99.",
+          "FF 2022 Elite: o software mais estável, atualizado e completo. Acesso imediato, servidores rápidos e conteúdo exclusivo. Planos a partir de R$ 9,99.",
       },
-      { property: "og:title", content: "Download Free Fire 2022 Premium" },
+      { property: "og:title", content: "FF 2022 Elite" },
       {
         property: "og:description",
         content:
-          "Baixe a versão desejada com rapidez, segurança e acesso imediato. Planos Starter, Premium e Ultimate VIP.",
+          "O software mais estável, atualizado e completo. Planos Elite Starter, Elite Premium e Elite VIP.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Index,
 });
+
 
 const plans = [
   {
