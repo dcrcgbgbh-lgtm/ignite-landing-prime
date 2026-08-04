@@ -626,6 +626,9 @@ function Index() {
           </div>
         </div>
       </footer>
+
+      <LockedVideoModal video={lockedVideo} onClose={() => setLockedVideo(null)} />
     </div>
+
   );
 }
