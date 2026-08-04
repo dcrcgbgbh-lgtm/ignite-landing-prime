@@ -1,24 +1,537 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import {
+  Zap,
+  ShieldCheck,
+  Gem,
+  Wrench,
+  Globe2,
+  Heart,
+  Star,
+  Download,
+  Crown,
+  Flame,
+  Check,
+  ChevronDown,
+  Instagram,
+  Youtube,
+  Twitter,
+  MessageCircle,
+} from "lucide-react";
+import heroImg from "@/assets/hero.jpg";
+import { Particles } from "@/components/site/Particles";
+import {
+  Reveal,
+  ScrollProgress,
+  Loader,
+  BackToTop,
+  StatCounter,
+  OnlineCounter,
+} from "@/components/site/ui";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "Download Free Fire 2022 Premium | Rápido e Seguro" },
+      {
+        name: "description",
+        content:
+          "Baixe o Free Fire 2022 Premium com acesso imediato, servidores rápidos e download 100% seguro. Planos a partir de R$ 9,99.",
+      },
+      { property: "og:title", content: "Download Free Fire 2022 Premium" },
+      {
+        property: "og:description",
+        content:
+          "Baixe a versão desejada com rapidez, segurança e acesso imediato. Planos Starter, Premium e Ultimate VIP.",
+      },
+    ],
+  }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+const plans = [
+  {
+    name: "Starter",
+    price: "9,99",
+    features: ["Download liberado", "Atualizações", "Suporte básico"],
+    cta: "Comprar Agora",
+    badge: null as string | null,
+    highlight: false,
+    vip: false,
+  },
+  {
+    name: "Premium",
+    price: "14,90",
+    features: [
+      "Tudo do Starter",
+      "Prioridade no suporte",
+      "Atualizações rápidas",
+      "Melhor custo-benefício",
+    ],
+    cta: "Comprar Agora",
+    badge: "MAIS VENDIDO",
+    highlight: true,
+    vip: false,
+  },
+  {
+    name: "Ultimate VIP",
+    price: "29,90",
+    features: [
+      "Tudo do Premium",
+      "Acesso prioritário",
+      "Benefícios exclusivos",
+      "Melhor experiência",
+    ],
+    cta: "Virar VIP",
+    badge: "VIP",
+    highlight: false,
+    vip: true,
+  },
+];
+
+const reviews = [
+  { text: "Funcionou perfeitamente.", author: "Lucas M." },
+  { text: "Muito rápido e fácil.", author: "Bianca R." },
+  { text: "Visual incrível e excelente experiência.", author: "Diego S." },
+];
+
+const features = [
+  { icon: Zap, title: "Velocidade", desc: "Servidores otimizados para download em segundos." },
+  { icon: ShieldCheck, title: "Segurança", desc: "Arquivos verificados e conexão criptografada." },
+  { icon: Gem, title: "Qualidade", desc: "Versões íntegras, testadas e sem alterações." },
+  { icon: Wrench, title: "Atualizações Frequentes", desc: "Novas versões liberadas continuamente." },
+  { icon: Globe2, title: "Multi-dispositivos", desc: "Compatível com celulares, tablets e PC." },
+  { icon: Heart, title: "Suporte ao Cliente", desc: "Atendimento humano sempre que precisar." },
+];
+
+const faqs = [
+  {
+    q: "Como funciona?",
+    a: "Você escolhe o plano ideal, finaliza o pagamento e recebe o acesso ao download na hora, direto na tela de confirmação.",
+  },
+  {
+    q: "Como recebo acesso?",
+    a: "O acesso é liberado automaticamente após a confirmação do pagamento e também enviado para o seu e-mail.",
+  },
+  {
+    q: "O pagamento é rápido?",
+    a: "Sim. Pagamentos via Pix e cartão são confirmados em poucos segundos.",
+  },
+  {
+    q: "Preciso instalar algo?",
+    a: "Não é necessário nenhum programa adicional. Basta baixar o arquivo e seguir o passo a passo enviado.",
+  },
+  {
+    q: "Existe suporte?",
+    a: "Sim, nossa equipe atende todos os planos, com prioridade para Premium e Ultimate VIP.",
+  },
+];
+
+function Stars() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="flex gap-1 text-primary-glow">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <Star key={i} size={16} fill="currentColor" strokeWidth={0} />
+      ))}
+    </div>
+  );
+}
+
+function Index() {
+  const [open, setOpen] = useState<number | null>(0);
+
+  return (
+    <div className="relative min-h-screen overflow-x-hidden bg-background">
+      <Loader />
+      <ScrollProgress />
+      <Particles />
+      <BackToTop />
+
+      <header className="fixed inset-x-0 top-0 z-40 mx-auto mt-4 flex w-[min(1180px,92vw)] items-center justify-between rounded-2xl px-4 py-3 glass">
+        <div className="flex min-w-0 items-center gap-2">
+          <span
+            className="grid size-8 shrink-0 place-items-center rounded-lg"
+            style={{ background: "var(--gradient-primary)" }}
+          >
+            <Flame size={16} className="text-primary-foreground" />
+          </span>
+          <span className="truncate font-display text-sm font-bold">FF 2022 Premium</span>
+        </div>
+        <nav className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">
+          <a href="#planos" className="transition-colors hover:text-foreground">
+            Planos
+          </a>
+          <a href="#avaliacoes" className="transition-colors hover:text-foreground">
+            Avaliações
+          </a>
+          <a href="#diferenciais" className="transition-colors hover:text-foreground">
+            Diferenciais
+          </a>
+          <a href="#faq" className="transition-colors hover:text-foreground">
+            FAQ
+          </a>
+        </nav>
+        <a
+          href="#planos"
+          className="glow-hover shrink-0 rounded-xl px-4 py-2 text-xs font-bold text-primary-foreground"
+          style={{ background: "var(--gradient-primary)" }}
+        >
+          BAIXAR
+        </a>
+      </header>
+
+      {/* HERO */}
+      <section className="relative isolate flex min-h-[100svh] items-center justify-center px-5 pb-20 pt-32">
+        <img
+          src={heroImg}
+          alt="Ambiente escuro com luzes vermelhas representando o download premium"
+          width={1920}
+          height={1088}
+          className="absolute inset-0 -z-10 size-full object-cover opacity-95"
+        />
+        <div
+          className="absolute inset-0 -z-10"
+          style={{
+            background:
+              "linear-gradient(180deg, oklch(0.145 0 0 / 0.35) 30%, oklch(0.145 0 0 / 0.9) 100%), var(--gradient-hero)",
+          }}
+        />
+
+        <div className="mx-auto w-[min(1100px,100%)] text-center">
+          <Reveal>
+            <OnlineCounter />
+          </Reveal>
+          <Reveal delay={100}>
+            <h1 className="mt-6 font-display text-4xl font-extrabold leading-[1.05] sm:text-6xl lg:text-7xl">
+              <span className="text-gradient">Download Free Fire</span>
+              <br />
+              <span className="text-foreground">2022 Premium</span>
+            </h1>
+          </Reveal>
+          <Reveal delay={200}>
+            <p className="mx-auto mt-5 max-w-xl text-base text-muted-foreground sm:text-lg">
+              Baixe a versão desejada com rapidez, segurança e acesso imediato.
+            </p>
+          </Reveal>
+          <Reveal delay={300}>
+            <div className="mt-9 flex justify-center">
+              <a
+                href="#planos"
+                className="glow-hover group relative inline-flex items-center gap-3 overflow-hidden rounded-2xl px-9 py-4 font-display text-sm font-bold tracking-wide text-primary-foreground sm:text-base"
+                style={{
+                  background: "var(--gradient-primary)",
+                  animation: "pulse-glow 3s ease-in-out infinite",
+                }}
+              >
+                <Download size={18} />
+                BAIXAR AGORA
+                <span
+                  className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 skew-x-12 bg-white/25"
+                  style={{ animation: "shimmer 2.8s ease-in-out infinite" }}
+                />
+              </a>
+            </div>
+          </Reveal>
+
+          <div className="mx-auto mt-16 grid w-full grid-cols-2 gap-4 lg:grid-cols-4">
+            {[
+              { label: "Downloads", node: <StatCounter target={100000} prefix="+" /> },
+              { label: "Avaliações", node: <StatCounter target={4.9} decimals={1} suffix="/5" /> },
+              { label: "Servidores Rápidos", node: <StatCounter target={99.9} decimals={1} suffix="%" /> },
+              { label: "Download Seguro", node: <StatCounter target={100} suffix="%" /> },
+            ].map((s, i) => (
+              <Reveal key={s.label} delay={i * 90}>
+                <div className="glass glow-hover rounded-2xl px-4 py-6">
+                  {s.node}
+                  <p className="mt-2 text-xs uppercase tracking-widest text-muted-foreground">
+                    {s.label}
+                  </p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* PLANOS */}
+      <section id="planos" className="relative z-10 px-5 py-24">
+        <div className="mx-auto w-[min(1180px,100%)]">
+          <Reveal>
+            <p className="text-center text-xs uppercase tracking-[0.35em] text-primary-glow">
+              Planos
+            </p>
+            <h2 className="mt-4 text-center font-display text-3xl font-bold sm:text-5xl">
+              Escolha o seu acesso
+            </h2>
+          </Reveal>
+
+          <div className="mt-14 grid gap-6 lg:grid-cols-3 lg:items-center">
+            {plans.map((plan, i) => (
+              <Reveal key={plan.name} delay={i * 120}>
+                <article
+                  className={`glass glow-hover relative flex h-full flex-col rounded-3xl p-8 ${
+                    plan.highlight ? "lg:scale-[1.05]" : ""
+                  }`}
+                  style={
+                    plan.highlight
+                      ? { boxShadow: "var(--shadow-glow), var(--shadow-elegant)" }
+                      : undefined
+                  }
+                >
+                  {plan.badge && (
+                    <span
+                      className="absolute -top-3 left-8 inline-flex items-center gap-1 rounded-full px-3 py-1 text-[10px] font-bold tracking-widest"
+                      style={
+                        plan.vip
+                          ? {
+                              background: "var(--gradient-gold)",
+                              color: "oklch(0.15 0 0)",
+                            }
+                          : {
+                              background: "var(--gradient-primary)",
+                              color: "var(--primary-foreground)",
+                            }
+                      }
+                    >
+                      {plan.vip ? <Crown size={12} /> : <Flame size={12} />}
+                      {plan.badge}
+                    </span>
+                  )}
+
+                  <h3 className="font-display text-xl font-bold">{plan.name}</h3>
+                  <p className="mt-4 flex items-baseline gap-1">
+                    <span className="text-sm text-muted-foreground">R$</span>
+                    <span
+                      className={`font-display text-4xl font-extrabold ${
+                        plan.vip ? "text-gold" : "text-foreground"
+                      }`}
+                    >
+                      {plan.price}
+                    </span>
+                  </p>
+
+                  <ul className="mt-7 flex-1 space-y-3 text-sm text-muted-foreground">
+                    {plan.features.map((f) => (
+                      <li key={f} className="flex items-start gap-3">
+                        <span
+                          className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full"
+                          style={{
+                            background: plan.vip
+                              ? "var(--gradient-gold)"
+                              : "oklch(0.51 0.2 26.5 / 0.2)",
+                          }}
+                        >
+                          <Check
+                            size={12}
+                            className={plan.vip ? "text-background" : "text-primary-glow"}
+                            strokeWidth={3}
+                          />
+                        </span>
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <button
+                    type="button"
+                    className="glow-hover mt-8 w-full rounded-2xl py-3.5 font-display text-sm font-bold"
+                    style={
+                      plan.vip
+                        ? { background: "var(--gradient-gold)", color: "oklch(0.15 0 0)" }
+                        : plan.highlight
+                          ? {
+                              background: "var(--gradient-primary)",
+                              color: "var(--primary-foreground)",
+                              animation: "pulse-glow 3s ease-in-out infinite",
+                            }
+                          : {
+                              background: "var(--secondary)",
+                              color: "var(--foreground)",
+                            }
+                    }
+                  >
+                    {plan.cta}
+                  </button>
+                </article>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* AVALIAÇÕES */}
+      <section id="avaliacoes" className="relative z-10 px-5 py-24">
+        <div className="mx-auto w-[min(1180px,100%)]">
+          <Reveal>
+            <p className="text-center text-xs uppercase tracking-[0.35em] text-primary-glow">
+              Avaliações
+            </p>
+            <h2 className="mt-4 text-center font-display text-3xl font-bold sm:text-5xl">
+              Quem baixou, aprovou
+            </h2>
+          </Reveal>
+          <div className="mt-14 grid gap-6 md:grid-cols-3">
+            {reviews.map((r, i) => (
+              <Reveal key={r.author} delay={i * 130}>
+                <figure className="glass glow-hover h-full rounded-3xl p-7">
+                  <Stars />
+                  <blockquote className="mt-5 font-display text-lg leading-snug">
+                    “{r.text}”
+                  </blockquote>
+                  <figcaption className="mt-6 text-xs uppercase tracking-widest text-muted-foreground">
+                    {r.author} · Compra verificada
+                  </figcaption>
+                </figure>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* DIFERENCIAIS */}
+      <section id="diferenciais" className="relative z-10 px-5 py-24">
+        <div className="mx-auto w-[min(1180px,100%)]">
+          <Reveal>
+            <p className="text-center text-xs uppercase tracking-[0.35em] text-primary-glow">
+              Diferenciais
+            </p>
+            <h2 className="mt-4 text-center font-display text-3xl font-bold sm:text-5xl">
+              Feito para quem exige o melhor
+            </h2>
+          </Reveal>
+          <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {features.map((f, i) => (
+              <Reveal key={f.title} delay={i * 90}>
+                <div className="glass glow-hover h-full rounded-3xl p-7">
+                  <span
+                    className="grid size-11 place-items-center rounded-2xl"
+                    style={{ background: "oklch(0.51 0.2 26.5 / 0.18)" }}
+                  >
+                    <f.icon size={20} className="text-primary-glow" />
+                  </span>
+                  <h3 className="mt-5 font-display text-lg font-bold">{f.title}</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">{f.desc}</p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section id="faq" className="relative z-10 px-5 py-24">
+        <div className="mx-auto w-[min(820px,100%)]">
+          <Reveal>
+            <p className="text-center text-xs uppercase tracking-[0.35em] text-primary-glow">
+              FAQ
+            </p>
+            <h2 className="mt-4 text-center font-display text-3xl font-bold sm:text-5xl">
+              Perguntas frequentes
+            </h2>
+          </Reveal>
+          <div className="mt-12 space-y-3">
+            {faqs.map((item, i) => {
+              const isOpen = open === i;
+              return (
+                <Reveal key={item.q} delay={i * 70}>
+                  <div className="glass overflow-hidden rounded-2xl">
+                    <button
+                      type="button"
+                      onClick={() => setOpen(isOpen ? null : i)}
+                      aria-expanded={isOpen}
+                      className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
+                    >
+                      <span className="min-w-0 font-display text-base font-semibold">
+                        {item.q}
+                      </span>
+                      <ChevronDown
+                        size={18}
+                        className={`shrink-0 text-primary-glow transition-transform duration-300 ${
+                          isOpen ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+                    <div
+                      className="grid transition-all duration-500 ease-out"
+                      style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
+                    >
+                      <div className="overflow-hidden">
+                        <p className="px-6 pb-5 text-sm text-muted-foreground">{item.a}</p>
+                      </div>
+                    </div>
+                  </div>
+                </Reveal>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA FINAL */}
+      <section className="relative z-10 px-5 pb-24">
+        <Reveal>
+          <div
+            className="glass mx-auto w-[min(1180px,100%)] rounded-[2rem] px-8 py-16 text-center"
+            style={{ backgroundImage: "var(--gradient-hero)" }}
+          >
+            <h2 className="font-display text-3xl font-bold sm:text-4xl">
+              Pronto para baixar agora?
+            </h2>
+            <p className="mx-auto mt-4 max-w-lg text-sm text-muted-foreground">
+              Acesso imediato após a confirmação. Sem espera, sem complicação.
+            </p>
+            <a
+              href="#planos"
+              className="glow-hover mt-8 inline-flex items-center gap-3 rounded-2xl px-9 py-4 font-display text-sm font-bold text-primary-foreground"
+              style={{ background: "var(--gradient-primary)" }}
+            >
+              <Download size={18} />
+              BAIXAR AGORA
+            </a>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="relative z-10 border-t border-border px-5 py-14">
+        <div className="mx-auto grid w-[min(1180px,100%)] gap-8 md:grid-cols-[1fr_auto] md:items-center">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span
+                className="grid size-8 shrink-0 place-items-center rounded-lg"
+                style={{ background: "var(--gradient-primary)" }}
+              >
+                <Flame size={16} className="text-primary-foreground" />
+              </span>
+              <span className="font-display text-sm font-bold">FF 2022 Premium</span>
+            </div>
+            <p className="mt-4 max-w-md text-xs text-muted-foreground">
+              © 2026 Todos os direitos reservados. Este site não possui vínculo oficial com
+              desenvolvedores ou distribuidoras de jogos.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-4 text-xs text-muted-foreground">
+              <a href="#faq" className="transition-colors hover:text-foreground">
+                Política de Privacidade
+              </a>
+              <a href="#faq" className="transition-colors hover:text-foreground">
+                Termos de Uso
+              </a>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            {[Instagram, Youtube, Twitter, MessageCircle].map((Icon, i) => (
+              <a
+                key={i}
+                href="#"
+                aria-label="Rede social"
+                className="glass glow-hover grid size-11 place-items-center rounded-xl text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <Icon size={18} />
+              </a>
+            ))}
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
