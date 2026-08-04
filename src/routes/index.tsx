@@ -248,7 +248,7 @@ function Index() {
           >
             <Flame size={16} className="text-primary-foreground" />
           </span>
-          <span className="truncate font-display text-sm font-bold">FF 2022 Premium</span>
+          <span className="truncate font-display text-sm font-bold">FF 2022 Elite</span>
         </div>
         <nav className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">
           <a href="#planos" className="transition-colors hover:text-foreground">
