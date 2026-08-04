@@ -569,7 +569,7 @@ function Index() {
             style={{ backgroundImage: "var(--gradient-hero)" }}
           >
             <h2 className="font-display text-3xl font-bold sm:text-4xl">
-              Pronto para baixar agora?
+              Pronto para liberar seu acesso?
             </h2>
             <p className="mx-auto mt-4 max-w-lg text-sm text-muted-foreground">
               Acesso imediato após a confirmação. Sem espera, sem complicação.
@@ -579,9 +579,10 @@ function Index() {
               className="glow-hover mt-8 inline-flex items-center gap-3 rounded-2xl px-9 py-4 font-display text-sm font-bold text-primary-foreground"
               style={{ background: "var(--gradient-primary)" }}
             >
-              <Download size={18} />
-              BAIXAR AGORA
+              <Rocket size={18} />
+              🚀 LIBERAR ACESSO
             </a>
+
           </div>
         </Reveal>
       </section>
