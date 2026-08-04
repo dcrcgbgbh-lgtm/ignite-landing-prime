@@ -597,7 +597,7 @@ function Index() {
               >
                 <Flame size={16} className="text-primary-foreground" />
               </span>
-              <span className="font-display text-sm font-bold">FF 2022 Premium</span>
+              <span className="font-display text-sm font-bold">FF 2022 Elite</span>
             </div>
             <p className="mt-4 max-w-md text-xs text-muted-foreground">
               © 2026 Todos os direitos reservados. Este site não possui vínculo oficial com
