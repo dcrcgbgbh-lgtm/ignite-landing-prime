@@ -187,13 +187,13 @@ function Index() {
           alt="Ambiente escuro com luzes vermelhas representando o download premium"
           width={1920}
           height={1088}
-          className="absolute inset-0 -z-10 size-full object-cover opacity-60"
+          className="absolute inset-0 -z-10 size-full object-cover opacity-95"
         />
         <div
           className="absolute inset-0 -z-10"
           style={{
             background:
-              "linear-gradient(180deg, oklch(0.145 0 0 / 0.75), oklch(0.145 0 0 / 0.95)), var(--gradient-hero)",
+              "linear-gradient(180deg, oklch(0.145 0 0 / 0.35) 30%, oklch(0.145 0 0 / 0.9) 100%), var(--gradient-hero)",
           }}
         />
 
