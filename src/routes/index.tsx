@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Zap,
   ShieldCheck,
@@ -8,7 +8,6 @@ import {
   Globe2,
   Heart,
   Star,
-  Download,
   Crown,
   Flame,
   Check,
@@ -17,6 +16,10 @@ import {
   Youtube,
   Twitter,
   MessageCircle,
+  Lock,
+  Play,
+  X,
+  Rocket,
 } from "lucide-react";
 import heroImg from "@/assets/hero.jpg";
 import { Particles } from "@/components/site/Particles";
@@ -32,18 +35,20 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Download Free Fire 2022 Premium | Rápido e Seguro" },
+      { title: "FF 2022 Elite | Software Estável, Atualizado e Completo" },
       {
         name: "description",
         content:
-          "Baixe o Free Fire 2022 Premium com acesso imediato, servidores rápidos e download 100% seguro. Planos a partir de R$ 9,99.",
+          "FF 2022 Elite: o software mais estável, atualizado e completo. Acesso imediato, servidores rápidos e conteúdo exclusivo. Planos a partir de R$ 9,99.",
       },
-      { property: "og:title", content: "Download Free Fire 2022 Premium" },
+      { property: "og:title", content: "FF 2022 Elite" },
       {
         property: "og:description",
         content:
-          "Baixe a versão desejada com rapidez, segurança e acesso imediato. Planos Starter, Premium e Ultimate VIP.",
+          "O software mais estável, atualizado e completo. Planos Elite Starter, Elite Premium e Elite VIP.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: Index,
@@ -51,43 +56,53 @@ export const Route = createFileRoute("/")({
 
 const plans = [
   {
-    name: "Starter",
+    name: "💎 Elite Starter",
     price: "9,99",
     features: ["Download liberado", "Atualizações", "Suporte básico"],
-    cta: "Comprar Agora",
+    cta: "💎 COMPRAR AGORA",
     badge: null as string | null,
     highlight: false,
     vip: false,
   },
   {
-    name: "Premium",
+    name: "🔥 Elite Premium",
     price: "14,90",
     features: [
-      "Tudo do Starter",
+      "Tudo do Elite Starter",
       "Prioridade no suporte",
       "Atualizações rápidas",
       "Melhor custo-benefício",
     ],
-    cta: "Comprar Agora",
+    cta: "💎 COMPRAR AGORA",
     badge: "MAIS VENDIDO",
     highlight: true,
     vip: false,
   },
   {
-    name: "Ultimate VIP",
+    name: "👑 Elite VIP",
     price: "29,90",
     features: [
-      "Tudo do Premium",
+      "Tudo do Elite Premium",
       "Acesso prioritário",
       "Benefícios exclusivos",
       "Melhor experiência",
     ],
-    cta: "Virar VIP",
+    cta: "💎 COMPRAR AGORA",
     badge: "VIP",
     highlight: false,
     vip: true,
   },
 ];
+
+const exclusiveVideos = [
+  { title: "Configuração Elite completa", duration: "12:40", tint: "26.5" },
+  { title: "Ajustes avançados de estabilidade", duration: "08:15", tint: "14" },
+  { title: "Otimização para celulares", duration: "10:02", tint: "40" },
+  { title: "Atualizações e manutenção", duration: "06:33", tint: "5" },
+  { title: "Suporte VIP: passo a passo", duration: "15:21", tint: "32" },
+  { title: "Recursos exclusivos Elite", duration: "09:47", tint: "20" },
+];
+
 
 const reviews = [
   { text: "Funcionou perfeitamente.", author: "Lucas M." },
@@ -137,8 +152,86 @@ function Stars() {
   );
 }
 
+function LockedVideoModal({
+  video,
+  onClose,
+}: {
+  video: (typeof exclusiveVideos)[number] | null;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    if (!video) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [video, onClose]);
+
+  if (!video) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center px-5"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Conteúdo exclusivo"
+    >
+      <button
+        type="button"
+        aria-label="Fechar"
+        onClick={onClose}
+        className="absolute inset-0 cursor-default bg-black/70 backdrop-blur-sm"
+        style={{ animation: "fade-in 0.25s ease-out" }}
+      />
+      <div
+        className="glass relative w-[min(460px,100%)] rounded-3xl p-8 text-center"
+        style={{
+          boxShadow: "var(--shadow-glow), var(--shadow-elegant)",
+          animation: "scale-in 0.28s cubic-bezier(0.16,1,0.3,1)",
+        }}
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Fechar"
+          className="absolute right-4 top-4 grid size-9 place-items-center rounded-xl text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <X size={18} />
+        </button>
+        <span
+          className="mx-auto grid size-14 place-items-center rounded-2xl"
+          style={{ background: "var(--gradient-primary)" }}
+        >
+          <Lock size={22} className="text-primary-foreground" />
+        </span>
+        <h3 className="mt-5 font-display text-xl font-bold">Conteúdo exclusivo</h3>
+        <p className="mt-3 text-sm text-muted-foreground">
+          “{video.title}” está disponível apenas para assinantes. Escolha um plano para liberar
+          todo o conteúdo Elite.
+        </p>
+        <a
+          href="#planos"
+          onClick={onClose}
+          className="glow-hover mt-7 inline-flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 font-display text-sm font-bold text-primary-foreground"
+          style={{ background: "var(--gradient-primary)" }}
+        >
+          <Gem size={16} />
+          Ver Planos
+        </a>
+      </div>
+    </div>
+  );
+}
+
 function Index() {
   const [open, setOpen] = useState<number | null>(0);
+  const [lockedVideo, setLockedVideo] = useState<(typeof exclusiveVideos)[number] | null>(null);
+
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-background">
@@ -155,7 +248,7 @@ function Index() {
           >
             <Flame size={16} className="text-primary-foreground" />
           </span>
-          <span className="truncate font-display text-sm font-bold">FF 2022 Premium</span>
+          <span className="truncate font-display text-sm font-bold">FF 2022 Elite</span>
         </div>
         <nav className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">
           <a href="#planos" className="transition-colors hover:text-foreground">
@@ -173,11 +266,12 @@ function Index() {
         </nav>
         <a
           href="#planos"
-          className="glow-hover shrink-0 rounded-xl px-4 py-2 text-xs font-bold text-primary-foreground"
+          className="glow-hover inline-flex shrink-0 items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold text-primary-foreground"
           style={{ background: "var(--gradient-primary)" }}
         >
-          BAIXAR
+          🚀 LIBERAR ACESSO
         </a>
+
       </header>
 
       {/* HERO */}
@@ -203,14 +297,13 @@ function Index() {
           </Reveal>
           <Reveal delay={100}>
             <h1 className="mt-6 font-display text-4xl font-extrabold leading-[1.05] sm:text-6xl lg:text-7xl">
-              <span className="text-gradient">Download Free Fire</span>
-              <br />
-              <span className="text-foreground">2022 Premium</span>
+              <span className="text-gradient">FF 2022</span>{" "}
+              <span className="text-foreground">Elite</span>
             </h1>
           </Reveal>
           <Reveal delay={200}>
             <p className="mx-auto mt-5 max-w-xl text-base text-muted-foreground sm:text-lg">
-              Baixe a versão desejada com rapidez, segurança e acesso imediato.
+              O software mais estável, atualizado e completo.
             </p>
           </Reveal>
           <Reveal delay={300}>
@@ -223,8 +316,9 @@ function Index() {
                   animation: "pulse-glow 3s ease-in-out infinite",
                 }}
               >
-                <Download size={18} />
-                BAIXAR AGORA
+                <Rocket size={18} />
+                🚀 LIBERAR ACESSO
+
                 <span
                   className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 skew-x-12 bg-white/25"
                   style={{ animation: "shimmer 2.8s ease-in-out infinite" }}
@@ -388,6 +482,67 @@ function Index() {
         </div>
       </section>
 
+      {/* CONTEÚDO EXCLUSIVO */}
+      <section id="conteudo-exclusivo" className="relative z-10 px-5 py-24">
+        <div className="mx-auto w-[min(1180px,100%)]">
+          <Reveal>
+            <p className="text-center text-xs uppercase tracking-[0.35em] text-primary-glow">
+              Conteúdo Exclusivo
+            </p>
+            <h2 className="mt-4 text-center font-display text-3xl font-bold sm:text-5xl">
+              Vídeos liberados para assinantes
+            </h2>
+            <p className="mx-auto mt-4 max-w-lg text-center text-sm text-muted-foreground">
+              Todo o acervo fica visível, mas o acesso é liberado somente após a confirmação do
+              pagamento.
+            </p>
+          </Reveal>
+
+          <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {exclusiveVideos.map((video, i) => (
+              <Reveal key={video.title} delay={i * 90}>
+                <button
+                  type="button"
+                  onClick={() => setLockedVideo(video)}
+                  aria-label={`Conteúdo bloqueado: ${video.title}`}
+                  className="glass glow-hover group block w-full overflow-hidden rounded-3xl p-3 text-left"
+                >
+                  <div className="relative aspect-video overflow-hidden rounded-2xl">
+                    <div
+                      className="absolute inset-0 transition-transform duration-500 group-hover:scale-105"
+                      style={{
+                        background: `radial-gradient(120% 100% at 30% 0%, oklch(0.45 0.18 ${video.tint} / 0.75) 0%, oklch(0.16 0.02 ${video.tint}) 70%)`,
+                      }}
+                    />
+                    <div className="absolute inset-0 backdrop-blur-[3px]" />
+                    <div className="absolute inset-0 grid place-items-center">
+                      <span
+                        className="grid size-14 place-items-center rounded-2xl border border-white/10"
+                        style={{ background: "oklch(0.145 0 0 / 0.55)" }}
+                      >
+                        <Lock size={20} className="text-primary-glow" />
+                      </span>
+                    </div>
+                    <span className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-black/60 px-2.5 py-1 text-[10px] font-bold tracking-widest text-white/80">
+                      <Play size={10} fill="currentColor" strokeWidth={0} />
+                      {video.duration}
+                    </span>
+                  </div>
+                  <div className="flex items-start justify-between gap-3 px-3 py-4">
+                    <h3 className="min-w-0 font-display text-sm font-bold">{video.title}</h3>
+                    <span className="shrink-0 rounded-full bg-secondary px-2.5 py-1 text-[10px] font-bold tracking-widest text-muted-foreground">
+                      BLOQUEADO
+                    </span>
+                  </div>
+                </button>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+
+
       {/* DIFERENCIAIS */}
       <section id="diferenciais" className="relative z-10 px-5 py-24">
         <div className="mx-auto w-[min(1180px,100%)]">
@@ -475,7 +630,7 @@ function Index() {
             style={{ backgroundImage: "var(--gradient-hero)" }}
           >
             <h2 className="font-display text-3xl font-bold sm:text-4xl">
-              Pronto para baixar agora?
+              Pronto para liberar seu acesso?
             </h2>
             <p className="mx-auto mt-4 max-w-lg text-sm text-muted-foreground">
               Acesso imediato após a confirmação. Sem espera, sem complicação.
@@ -485,9 +640,10 @@ function Index() {
               className="glow-hover mt-8 inline-flex items-center gap-3 rounded-2xl px-9 py-4 font-display text-sm font-bold text-primary-foreground"
               style={{ background: "var(--gradient-primary)" }}
             >
-              <Download size={18} />
-              BAIXAR AGORA
+              <Rocket size={18} />
+              🚀 LIBERAR ACESSO
             </a>
+
           </div>
         </Reveal>
       </section>
@@ -503,7 +659,7 @@ function Index() {
               >
                 <Flame size={16} className="text-primary-foreground" />
               </span>
-              <span className="font-display text-sm font-bold">FF 2022 Premium</span>
+              <span className="font-display text-sm font-bold">FF 2022 Elite</span>
             </div>
             <p className="mt-4 max-w-md text-xs text-muted-foreground">
               © 2026 Todos os direitos reservados. Este site não possui vínculo oficial com
@@ -532,6 +688,9 @@ function Index() {
           </div>
         </div>
       </footer>
+
+      <LockedVideoModal video={lockedVideo} onClose={() => setLockedVideo(null)} />
     </div>
+
   );
 }
