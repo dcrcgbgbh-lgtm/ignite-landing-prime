@@ -297,14 +297,13 @@ function Index() {
           </Reveal>
           <Reveal delay={100}>
             <h1 className="mt-6 font-display text-4xl font-extrabold leading-[1.05] sm:text-6xl lg:text-7xl">
-              <span className="text-gradient">Download Free Fire</span>
-              <br />
-              <span className="text-foreground">2022 Premium</span>
+              <span className="text-gradient">FF 2022</span>{" "}
+              <span className="text-foreground">Elite</span>
             </h1>
           </Reveal>
           <Reveal delay={200}>
             <p className="mx-auto mt-5 max-w-xl text-base text-muted-foreground sm:text-lg">
-              Baixe a versão desejada com rapidez, segurança e acesso imediato.
+              O software mais estável, atualizado e completo.
             </p>
           </Reveal>
           <Reveal delay={300}>
@@ -317,8 +316,9 @@ function Index() {
                   animation: "pulse-glow 3s ease-in-out infinite",
                 }}
               >
-                <Download size={18} />
-                BAIXAR AGORA
+                <Rocket size={18} />
+                🚀 LIBERAR ACESSO
+
                 <span
                   className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 skew-x-12 bg-white/25"
                   style={{ animation: "shimmer 2.8s ease-in-out infinite" }}
