@@ -482,6 +482,67 @@ function Index() {
         </div>
       </section>
 
+      {/* CONTEÚDO EXCLUSIVO */}
+      <section id="conteudo-exclusivo" className="relative z-10 px-5 py-24">
+        <div className="mx-auto w-[min(1180px,100%)]">
+          <Reveal>
+            <p className="text-center text-xs uppercase tracking-[0.35em] text-primary-glow">
+              Conteúdo Exclusivo
+            </p>
+            <h2 className="mt-4 text-center font-display text-3xl font-bold sm:text-5xl">
+              Vídeos liberados para assinantes
+            </h2>
+            <p className="mx-auto mt-4 max-w-lg text-center text-sm text-muted-foreground">
+              Todo o acervo fica visível, mas o acesso é liberado somente após a confirmação do
+              pagamento.
+            </p>
+          </Reveal>
+
+          <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {exclusiveVideos.map((video, i) => (
+              <Reveal key={video.title} delay={i * 90}>
+                <button
+                  type="button"
+                  onClick={() => setLockedVideo(video)}
+                  aria-label={`Conteúdo bloqueado: ${video.title}`}
+                  className="glass glow-hover group block w-full overflow-hidden rounded-3xl p-3 text-left"
+                >
+                  <div className="relative aspect-video overflow-hidden rounded-2xl">
+                    <div
+                      className="absolute inset-0 transition-transform duration-500 group-hover:scale-105"
+                      style={{
+                        background: `radial-gradient(120% 100% at 30% 0%, oklch(0.45 0.18 ${video.tint} / 0.75) 0%, oklch(0.16 0.02 ${video.tint}) 70%)`,
+                      }}
+                    />
+                    <div className="absolute inset-0 backdrop-blur-[3px]" />
+                    <div className="absolute inset-0 grid place-items-center">
+                      <span
+                        className="grid size-14 place-items-center rounded-2xl border border-white/10"
+                        style={{ background: "oklch(0.145 0 0 / 0.55)" }}
+                      >
+                        <Lock size={20} className="text-primary-glow" />
+                      </span>
+                    </div>
+                    <span className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-black/60 px-2.5 py-1 text-[10px] font-bold tracking-widest text-white/80">
+                      <Play size={10} fill="currentColor" strokeWidth={0} />
+                      {video.duration}
+                    </span>
+                  </div>
+                  <div className="flex items-start justify-between gap-3 px-3 py-4">
+                    <h3 className="min-w-0 font-display text-sm font-bold">{video.title}</h3>
+                    <span className="shrink-0 rounded-full bg-secondary px-2.5 py-1 text-[10px] font-bold tracking-widest text-muted-foreground">
+                      BLOQUEADO
+                    </span>
+                  </div>
+                </button>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+
+
       {/* DIFERENCIAIS */}
       <section id="diferenciais" className="relative z-10 px-5 py-24">
         <div className="mx-auto w-[min(1180px,100%)]">
