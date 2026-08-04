@@ -266,11 +266,12 @@ function Index() {
         </nav>
         <a
           href="#planos"
-          className="glow-hover shrink-0 rounded-xl px-4 py-2 text-xs font-bold text-primary-foreground"
+          className="glow-hover inline-flex shrink-0 items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold text-primary-foreground"
           style={{ background: "var(--gradient-primary)" }}
         >
-          BAIXAR
+          🚀 LIBERAR ACESSO
         </a>
+
       </header>
 
       {/* HERO */}
