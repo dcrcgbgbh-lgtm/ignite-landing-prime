@@ -22,6 +22,8 @@ import {
   Rocket,
 } from "lucide-react";
 import heroImg from "@/assets/hero.jpg";
+import { CheckoutModal } from "@/components/site/CheckoutModal";
+import { checkoutUrls, type PlanId } from "@/config/pix";
 import { Particles } from "@/components/site/Particles";
 import {
   Reveal,
@@ -56,6 +58,7 @@ export const Route = createFileRoute("/")({
 
 const plans = [
   {
+    id: "starter" as PlanId,
     name: "💎 Elite Starter",
     price: "9,99",
     features: ["Download liberado", "Atualizações", "Suporte básico"],
@@ -65,6 +68,7 @@ const plans = [
     vip: false,
   },
   {
+    id: "premium" as PlanId,
     name: "🔥 Elite Premium",
     price: "14,90",
     features: [
@@ -79,6 +83,7 @@ const plans = [
     vip: false,
   },
   {
+    id: "vip" as PlanId,
     name: "👑 Elite VIP",
     price: "29,90",
     features: [
@@ -231,6 +236,16 @@ function LockedVideoModal({
 function Index() {
   const [open, setOpen] = useState<number | null>(0);
   const [lockedVideo, setLockedVideo] = useState<(typeof exclusiveVideos)[number] | null>(null);
+  const [checkoutPlan, setCheckoutPlan] = useState<PlanId | null>(null);
+
+  const startCheckout = (id: PlanId) => {
+    const url = checkoutUrls[id];
+    if (url) {
+      window.location.href = url;
+      return;
+    }
+    setCheckoutPlan(id);
+  };
 
 
   return (
@@ -428,6 +443,7 @@ function Index() {
 
                   <button
                     type="button"
+                    onClick={() => startCheckout(plan.id)}
                     className="glow-hover mt-8 w-full rounded-2xl py-3.5 font-display text-sm font-bold"
                     style={
                       plan.vip
