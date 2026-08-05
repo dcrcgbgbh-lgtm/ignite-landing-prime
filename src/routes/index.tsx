@@ -706,6 +706,7 @@ function Index() {
       </footer>
 
       <LockedVideoModal video={lockedVideo} onClose={() => setLockedVideo(null)} />
+      <CheckoutModal planId={checkoutPlan} onClose={() => setCheckoutPlan(null)} />
     </div>
 
   );
