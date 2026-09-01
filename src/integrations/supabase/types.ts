@@ -14,16 +14,293 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bot_rules: {
+        Row: {
+          active: boolean
+          ask_for_print: boolean
+          created_at: string
+          id: string
+          keywords: string[]
+          priority: number
+          response: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          ask_for_print?: boolean
+          created_at?: string
+          id?: string
+          keywords?: string[]
+          priority?: number
+          response: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          ask_for_print?: boolean
+          created_at?: string
+          id?: string
+          keywords?: string[]
+          priority?: number
+          response?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      conversations: {
+        Row: {
+          bootstrapped: boolean
+          created_at: string
+          id: string
+          last_message: string | null
+          last_message_at: string | null
+          session_id: string
+          stage: string
+          status: string
+          unread_count: number
+          updated_at: string
+        }
+        Insert: {
+          bootstrapped?: boolean
+          created_at?: string
+          id?: string
+          last_message?: string | null
+          last_message_at?: string | null
+          session_id: string
+          stage?: string
+          status?: string
+          unread_count?: number
+          updated_at?: string
+        }
+        Update: {
+          bootstrapped?: boolean
+          created_at?: string
+          id?: string
+          last_message?: string | null
+          last_message_at?: string | null
+          session_id?: string
+          stage?: string
+          status?: string
+          unread_count?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          auto_key: string | null
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          image_url: string | null
+          read_by_owner: boolean
+          sender: string
+        }
+        Insert: {
+          auto_key?: string | null
+          content?: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          read_by_owner?: boolean
+          sender: string
+        }
+        Update: {
+          auto_key?: string | null
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          read_by_owner?: boolean
+          sender?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plans: {
+        Row: {
+          active: boolean
+          badge: string | null
+          checkout_url: string
+          created_at: string
+          cta: string
+          features: Json
+          highlight: boolean
+          id: string
+          name: string
+          pix_payload: string
+          price: string
+          sort_order: number
+          updated_at: string
+          vip: boolean
+        }
+        Insert: {
+          active?: boolean
+          badge?: string | null
+          checkout_url?: string
+          created_at?: string
+          cta?: string
+          features?: Json
+          highlight?: boolean
+          id: string
+          name: string
+          pix_payload?: string
+          price: string
+          sort_order?: number
+          updated_at?: string
+          vip?: boolean
+        }
+        Update: {
+          active?: boolean
+          badge?: string | null
+          checkout_url?: string
+          created_at?: string
+          cta?: string
+          features?: Json
+          highlight?: boolean
+          id?: string
+          name?: string
+          pix_payload?: string
+          price?: string
+          sort_order?: number
+          updated_at?: string
+          vip?: boolean
+        }
+        Relationships: []
+      }
+      purchase_events: {
+        Row: {
+          amount: string | null
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string
+          id: string
+          note: string | null
+          plan_id: string | null
+          session_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          plan_id?: string | null
+          session_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          plan_id?: string | null
+          session_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      site_settings: {
+        Row: {
+          created_at: string
+          is_public: boolean
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          created_at?: string
+          is_public?: boolean
+          key: string
+          updated_at?: string
+          value?: Json
+        }
+        Update: {
+          created_at?: string
+          is_public?: boolean
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      visitor_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+          session_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json
+          session_id: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
+          session_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "owner" | "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +427,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["owner", "admin", "user"],
+    },
   },
 } as const
