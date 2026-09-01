@@ -51,22 +51,26 @@ async function listMessages(db: AdminClient, conversationId: string): Promise<Ch
 async function touchConversation(
   db: AdminClient,
   conversationId: string,
-  patch: { last_message: string; stage?: string; incrementUnread?: number },
+  patch: { last_message: string; stage?: string | undefined; incrementUnread?: number },
 ) {
-  const update: Record<string, unknown> = {
-    last_message: patch.last_message.slice(0, 200),
-    last_message_at: new Date().toISOString(),
-  };
-  if (patch.stage) update['stage'] = patch.stage;
+  let unread: number | undefined;
   if (patch.incrementUnread) {
     const { data } = await db
       .from("conversations")
       .select("unread_count")
       .eq("id", conversationId)
       .maybeSingle();
-    update['unread_count'] = (data?.unread_count ?? 0) + patch.incrementUnread;
+    unread = (data?.unread_count ?? 0) + patch.incrementUnread;
   }
-  await db.from("conversations").update(update).eq("id", conversationId);
+  await db
+    .from("conversations")
+    .update({
+      last_message: patch.last_message.slice(0, 200),
+      last_message_at: new Date().toISOString(),
+      ...(patch.stage ? { stage: patch.stage } : {}),
+      ...(unread !== undefined ? { unread_count: unread } : {}),
+    })
+    .eq("id", conversationId);
 }
 
 function normalize(text: string): string {
