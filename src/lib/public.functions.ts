@@ -20,7 +20,10 @@ async function loadSettings(db: AdminClient): Promise<SiteSettings> {
   return mergeSettings(raw);
 }
 
-async function signMessages(db: AdminClient, rows: Record<string, unknown>[]): Promise<ChatMessage[]> {
+async function signMessages(
+  db: AdminClient,
+  rows: Record<string, unknown>[],
+): Promise<ChatMessage[]> {
   const out: ChatMessage[] = [];
   for (const row of rows) {
     let url = (row['image_url'] as string | null) ?? null;
@@ -102,27 +105,30 @@ const EVENTS = [
   "access_flow",
   "free_access",
   "paid_access",
+  "chat_started",
   "checkout_started",
+  "screenshot_uploaded",
 ] as const;
 type EventType = (typeof EVENTS)[number];
 
 export const trackEvent = createServerFn({ method: "POST" })
   .inputValidator((input: { sessionId: string; eventType: EventType; planId?: string }) => {
-    if (!input?.sessionId || !EVENTS.includes(input.eventType)) throw new Error("Invalid event");
+    if (!input?.sessionId || typeof input.sessionId !== "string" || input.sessionId.length > 80) {
+      throw new Error("Invalid session");
+    }
+    if (!EVENTS.includes(input.eventType)) throw new Error("Invalid event");
     return input;
   })
   .handler(async ({ data }) => {
     const db = await admin();
-    await db
-      .from("visitor_events")
-      .upsert(
-        {
-          session_id: data.sessionId,
-          event_type: data.eventType,
-          metadata: data.planId ? { plan_id: data.planId } : {},
-        },
-        { onConflict: "session_id,event_type", ignoreDuplicates: true },
-      );
+    await db.from("visitor_events").upsert(
+      {
+        session_id: data.sessionId,
+        event_type: data.eventType,
+        metadata: data.planId ? { plan_id: data.planId } : {},
+      },
+      { onConflict: "session_id,event_type", ignoreDuplicates: true },
+    );
 
     if (data.eventType === "checkout_started" && data.planId) {
       const { data: plan } = await db
@@ -146,7 +152,7 @@ function buildStepsMessage(settings: SiteSettings): string {
   const { steps_title, steps } = settings.bot_messages;
   const link = settings.free_access.tiktok_url;
   const lines = steps.map((s, i) => `${i + 1}. ${s}`).join("\n");
-  return `${steps_title}\n\n${link}\n\n${lines}`;
+  return `${steps_title}\n\nAcesse pelo link abaixo:\n${link}\n\n✅ Passo a passo:\n${lines}`;
 }
 
 export const startChat = createServerFn({ method: "POST" })
@@ -212,7 +218,7 @@ export const startChat = createServerFn({ method: "POST" })
         .from("conversations")
         .update({
           bootstrapped: true,
-          stage: "recebeu_instrucoes",
+          stage: "aguardando_print",
           last_message: settings.free_access.print_hint,
           last_message_at: new Date().toISOString(),
         })
@@ -251,7 +257,7 @@ export const sendChatMessage = createServerFn({ method: "POST" })
     const settings = await loadSettings(db);
     const { data: rules } = await db
       .from("bot_rules")
-      .select("keywords, response, ask_for_print")
+      .select("keywords, response, ask_for_print, delay_ms")
       .eq("active", true)
       .order("priority", { ascending: true });
 
@@ -260,8 +266,18 @@ export const sendChatMessage = createServerFn({ method: "POST" })
       (r.keywords ?? []).some((k) => k && text.includes(normalize(k))),
     );
 
+    // Já enviou print nessa conversa?
+    const { count: printCount } = await db
+      .from("messages")
+      .select("id", { count: "exact", head: true })
+      .eq("conversation_id", conversation.id)
+      .not("image_url", "is", null);
+    const hasPrint = (printCount ?? 0) > 0;
+
     const reply = match?.response ?? settings.bot_messages.fallback;
-    const askPrint = match?.ask_for_print ? `\n\n${settings.free_access.print_hint}` : "";
+    const shouldAskPrint = !hasPrint && (match?.ask_for_print ?? !match);
+    const askPrint = shouldAskPrint ? `\n\n${settings.bot_messages.ask_print}` : "";
+
     await db.from("messages").insert({
       conversation_id: conversation.id,
       sender: "bot",
@@ -276,7 +292,10 @@ export const sendChatMessage = createServerFn({ method: "POST" })
       incrementUnread: 1,
     });
 
-    return { messages: await listMessages(db, conversation.id) };
+    return {
+      messages: await listMessages(db, conversation.id),
+      delayMs: Math.min(Math.max(match?.delay_ms ?? 600, 0), 4000),
+    };
   });
 
 export const sendChatImage = createServerFn({ method: "POST" })
@@ -318,6 +337,11 @@ export const sendChatImage = createServerFn({ method: "POST" })
       content: settings.bot_messages.image_received,
       read_by_owner: true,
     });
+
+    await db.from("visitor_events").upsert(
+      { session_id: data.sessionId, event_type: "screenshot_uploaded", metadata: {} },
+      { onConflict: "session_id,event_type", ignoreDuplicates: true },
+    );
 
     await touchConversation(db, conversation.id, {
       last_message: "📸 Print recebido",
