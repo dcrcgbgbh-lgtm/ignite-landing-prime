@@ -14,13 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          details: Json
+          entity: string
+          id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          entity: string
+          id?: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          entity?: string
+          id?: string
+        }
+        Relationships: []
+      }
       bot_rules: {
         Row: {
           active: boolean
           ask_for_print: boolean
           created_at: string
+          delay_ms: number
           id: string
           keywords: string[]
+          label: string
           priority: number
           response: string
           updated_at: string
@@ -29,8 +58,10 @@ export type Database = {
           active?: boolean
           ask_for_print?: boolean
           created_at?: string
+          delay_ms?: number
           id?: string
           keywords?: string[]
+          label?: string
           priority?: number
           response: string
           updated_at?: string
@@ -39,8 +70,10 @@ export type Database = {
           active?: boolean
           ask_for_print?: boolean
           created_at?: string
+          delay_ms?: number
           id?: string
           keywords?: string[]
+          label?: string
           priority?: number
           response?: string
           updated_at?: string
@@ -49,6 +82,7 @@ export type Database = {
       }
       conversations: {
         Row: {
+          archived: boolean
           bootstrapped: boolean
           created_at: string
           id: string
@@ -61,6 +95,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          archived?: boolean
           bootstrapped?: boolean
           created_at?: string
           id?: string
@@ -73,6 +108,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          archived?: boolean
           bootstrapped?: boolean
           created_at?: string
           id?: string
