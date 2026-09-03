@@ -219,8 +219,8 @@ function LockedVideoModal({
           “{video.title}” está disponível apenas para assinantes. Escolha um plano para liberar
           todo o conteúdo Elite.
         </p>
-        <a
-          href="#planos"
+        <Link
+          to="/acesso"
           onClick={onClose}
           className="glow-hover mt-7 inline-flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 font-display text-sm font-bold text-primary-foreground"
           style={{ background: "var(--gradient-primary)" }}
@@ -266,9 +266,6 @@ function Index() {
           <span className="truncate font-display text-sm font-bold">FF 2022 Elite</span>
         </div>
         <nav className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">
-          <a href="#planos" className="transition-colors hover:text-foreground">
-            Planos
-          </a>
           <a href="#avaliacoes" className="transition-colors hover:text-foreground">
             Avaliações
           </a>
@@ -279,8 +276,8 @@ function Index() {
             FAQ
           </a>
         </nav>
-        <a
-          href="#planos"
+        <Link
+          to="/acesso"
           className="glow-hover inline-flex shrink-0 items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold text-primary-foreground"
           style={{ background: "var(--gradient-primary)" }}
         >
@@ -323,8 +320,8 @@ function Index() {
           </Reveal>
           <Reveal delay={300}>
             <div className="mt-9 flex justify-center">
-              <a
-                href="#planos"
+              <Link
+                to="/acesso"
                 className="glow-hover group relative inline-flex items-center gap-3 overflow-hidden rounded-2xl px-9 py-4 font-display text-sm font-bold tracking-wide text-primary-foreground sm:text-base"
                 style={{
                   background: "var(--gradient-primary)",
@@ -356,113 +353,6 @@ function Index() {
                     {s.label}
                   </p>
                 </div>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* PLANOS */}
-      <section id="planos" className="relative z-10 px-5 py-24">
-        <div className="mx-auto w-[min(1180px,100%)]">
-          <Reveal>
-            <p className="text-center text-xs uppercase tracking-[0.35em] text-primary-glow">
-              Planos
-            </p>
-            <h2 className="mt-4 text-center font-display text-3xl font-bold sm:text-5xl">
-              Escolha o seu acesso
-            </h2>
-          </Reveal>
-
-          <div className="mt-14 grid gap-6 lg:grid-cols-3 lg:items-center">
-            {plans.map((plan, i) => (
-              <Reveal key={plan.name} delay={i * 120}>
-                <article
-                  className={`glass glow-hover relative flex h-full flex-col rounded-3xl p-8 ${
-                    plan.highlight ? "lg:scale-[1.05]" : ""
-                  }`}
-                  style={
-                    plan.highlight
-                      ? { boxShadow: "var(--shadow-glow), var(--shadow-elegant)" }
-                      : undefined
-                  }
-                >
-                  {plan.badge && (
-                    <span
-                      className="absolute -top-3 left-8 inline-flex items-center gap-1 rounded-full px-3 py-1 text-[10px] font-bold tracking-widest"
-                      style={
-                        plan.vip
-                          ? {
-                              background: "var(--gradient-gold)",
-                              color: "oklch(0.15 0 0)",
-                            }
-                          : {
-                              background: "var(--gradient-primary)",
-                              color: "var(--primary-foreground)",
-                            }
-                      }
-                    >
-                      {plan.vip ? <Crown size={12} /> : <Flame size={12} />}
-                      {plan.badge}
-                    </span>
-                  )}
-
-                  <h3 className="font-display text-xl font-bold">{plan.name}</h3>
-                  <p className="mt-4 flex items-baseline gap-1">
-                    <span className="text-sm text-muted-foreground">R$</span>
-                    <span
-                      className={`font-display text-4xl font-extrabold ${
-                        plan.vip ? "text-gold" : "text-foreground"
-                      }`}
-                    >
-                      {plan.price}
-                    </span>
-                  </p>
-
-                  <ul className="mt-7 flex-1 space-y-3 text-sm text-muted-foreground">
-                    {plan.features.map((f) => (
-                      <li key={f} className="flex items-start gap-3">
-                        <span
-                          className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full"
-                          style={{
-                            background: plan.vip
-                              ? "var(--gradient-gold)"
-                              : "oklch(0.51 0.2 26.5 / 0.2)",
-                          }}
-                        >
-                          <Check
-                            size={12}
-                            className={plan.vip ? "text-background" : "text-primary-glow"}
-                            strokeWidth={3}
-                          />
-                        </span>
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-
-                  <button
-                    type="button"
-                    onClick={() => startCheckout(plan.id)}
-                    className="glow-hover mt-8 w-full rounded-2xl py-3.5 font-display text-sm font-bold"
-                    style={
-                      plan.vip
-                        ? { background: "var(--gradient-gold)", color: "oklch(0.15 0 0)" }
-                        : plan.highlight
-                          ? {
-                              background: "var(--gradient-primary)",
-                              color: "var(--primary-foreground)",
-                              animation: "pulse-glow 3s ease-in-out infinite",
-                            }
-                          : {
-                              background: "var(--secondary)",
-                              color: "var(--foreground)",
-                            }
-                    }
-                  >
-                    {plan.cta}
-                  </button>
-                </article>
               </Reveal>
             ))}
           </div>
@@ -651,8 +541,8 @@ function Index() {
             <p className="mx-auto mt-4 max-w-lg text-sm text-muted-foreground">
               Acesso imediato após a confirmação. Sem espera, sem complicação.
             </p>
-            <a
-              href="#planos"
+            <Link
+              to="/acesso"
               className="glow-hover mt-8 inline-flex items-center gap-3 rounded-2xl px-9 py-4 font-display text-sm font-bold text-primary-foreground"
               style={{ background: "var(--gradient-primary)" }}
             >
