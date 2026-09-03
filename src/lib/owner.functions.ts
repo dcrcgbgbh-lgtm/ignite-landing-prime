@@ -33,7 +33,9 @@ async function audit(
   entity: string,
   details: Record<string, unknown>,
 ) {
-  await db.from("audit_log").insert({ actor_id: userId, action, entity, details });
+  await db
+    .from("audit_log")
+    .insert({ actor_id: userId, action, entity, details: details as never });
 }
 
 async function signMessages(db: AdminClient, rows: Record<string, unknown>[]) {
@@ -293,7 +295,11 @@ export const updateConversation = createServerFn({ method: "POST" })
       await audit(db, userId, "delete", "conversation", { id: data.id });
       return { ok: true, deleted: true };
     }
-    const patch: Record<string, unknown> = {};
+    const patch: {
+      unread_count?: number;
+      status?: string;
+      archived?: boolean;
+    } = {};
     if (data.action === "read") {
       patch['unread_count'] = 0;
       await db.from("messages").update({ read_by_owner: true }).eq("conversation_id", data.id);
