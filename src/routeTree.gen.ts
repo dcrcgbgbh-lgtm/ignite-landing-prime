@@ -10,13 +10,26 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AcessoIndexRouteImport } from './routes/acesso.index'
 import { Route as AcessoGratisRouteImport } from './routes/acesso.gratis'
 import { Route as AcessoPagoRouteImport } from './routes/acesso.pago'
+import { Route as AuthenticatedOwnerDashboardRouteImport } from './routes/_authenticated/owner.dashboard'
+import { Route as AuthenticatedOwnerMensagensRouteImport } from './routes/_authenticated/owner.mensagens'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AcessoIndexRoute = AcessoIndexRouteImport.update({
@@ -34,36 +47,83 @@ const AcessoPagoRoute = AcessoPagoRouteImport.update({
   path: '/acesso/pago',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedOwnerDashboardRoute =
+  AuthenticatedOwnerDashboardRouteImport.update({
+    id: '/owner/dashboard',
+    path: '/owner/dashboard',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedOwnerMensagensRoute =
+  AuthenticatedOwnerMensagensRouteImport.update({
+    id: '/owner/mensagens',
+    path: '/owner/mensagens',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/acesso/gratis': typeof AcessoGratisRoute
   '/acesso/pago': typeof AcessoPagoRoute
   '/acesso/': typeof AcessoIndexRoute
+  '/owner/dashboard': typeof AuthenticatedOwnerDashboardRoute
+  '/owner/mensagens': typeof AuthenticatedOwnerMensagensRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/acesso/gratis': typeof AcessoGratisRoute
   '/acesso/pago': typeof AcessoPagoRoute
   '/acesso': typeof AcessoIndexRoute
+  '/owner/dashboard': typeof AuthenticatedOwnerDashboardRoute
+  '/owner/mensagens': typeof AuthenticatedOwnerMensagensRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
   '/acesso/gratis': typeof AcessoGratisRoute
   '/acesso/pago': typeof AcessoPagoRoute
   '/acesso/': typeof AcessoIndexRoute
+  '/_authenticated/owner/dashboard': typeof AuthenticatedOwnerDashboardRoute
+  '/_authenticated/owner/mensagens': typeof AuthenticatedOwnerMensagensRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/acesso/gratis' | '/acesso/pago' | '/acesso/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/acesso/gratis'
+    | '/acesso/pago'
+    | '/acesso/'
+    | '/owner/dashboard'
+    | '/owner/mensagens'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/acesso/gratis' | '/acesso/pago' | '/acesso'
-  id: '__root__' | '/' | '/acesso/gratis' | '/acesso/pago' | '/acesso/'
+  to:
+    | '/'
+    | '/auth'
+    | '/acesso/gratis'
+    | '/acesso/pago'
+    | '/acesso'
+    | '/owner/dashboard'
+    | '/owner/mensagens'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/acesso/gratis'
+    | '/acesso/pago'
+    | '/acesso/'
+    | '/_authenticated/owner/dashboard'
+    | '/_authenticated/owner/mensagens'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
   AcessoGratisRoute: typeof AcessoGratisRoute
   AcessoPagoRoute: typeof AcessoPagoRoute
   AcessoIndexRoute: typeof AcessoIndexRoute
@@ -76,6 +136,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/acesso/': {
@@ -99,11 +173,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AcessoPagoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/owner/dashboard': {
+      id: '/_authenticated/owner/dashboard'
+      path: '/owner/dashboard'
+      fullPath: '/owner/dashboard'
+      preLoaderRoute: typeof AuthenticatedOwnerDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/owner/mensagens': {
+      id: '/_authenticated/owner/mensagens'
+      path: '/owner/mensagens'
+      fullPath: '/owner/mensagens'
+      preLoaderRoute: typeof AuthenticatedOwnerMensagensRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedOwnerDashboardRoute: typeof AuthenticatedOwnerDashboardRoute
+  AuthenticatedOwnerMensagensRoute: typeof AuthenticatedOwnerMensagensRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedOwnerDashboardRoute: AuthenticatedOwnerDashboardRoute,
+  AuthenticatedOwnerMensagensRoute: AuthenticatedOwnerMensagensRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
   AcessoGratisRoute: AcessoGratisRoute,
   AcessoPagoRoute: AcessoPagoRoute,
   AcessoIndexRoute: AcessoIndexRoute,
