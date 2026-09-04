@@ -17,6 +17,7 @@ import { Route as AcessoGratisRouteImport } from './routes/acesso.gratis'
 import { Route as AcessoPagoRouteImport } from './routes/acesso.pago'
 import { Route as AuthenticatedOwnerDashboardRouteImport } from './routes/_authenticated/owner.dashboard'
 import { Route as AuthenticatedOwnerMensagensRouteImport } from './routes/_authenticated/owner.mensagens'
+import { Route as AuthenticatedOwnerPainelRouteImport } from './routes/_authenticated/owner.painel'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -59,6 +60,12 @@ const AuthenticatedOwnerMensagensRoute =
     path: '/owner/mensagens',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOwnerPainelRoute =
+  AuthenticatedOwnerPainelRouteImport.update({
+    id: '/owner/painel',
+    path: '/owner/painel',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -68,6 +75,7 @@ export interface FileRoutesByFullPath {
   '/acesso/': typeof AcessoIndexRoute
   '/owner/dashboard': typeof AuthenticatedOwnerDashboardRoute
   '/owner/mensagens': typeof AuthenticatedOwnerMensagensRoute
+  '/owner/painel': typeof AuthenticatedOwnerPainelRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -77,6 +85,7 @@ export interface FileRoutesByTo {
   '/acesso': typeof AcessoIndexRoute
   '/owner/dashboard': typeof AuthenticatedOwnerDashboardRoute
   '/owner/mensagens': typeof AuthenticatedOwnerMensagensRoute
+  '/owner/painel': typeof AuthenticatedOwnerPainelRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -88,6 +97,7 @@ export interface FileRoutesById {
   '/acesso/': typeof AcessoIndexRoute
   '/_authenticated/owner/dashboard': typeof AuthenticatedOwnerDashboardRoute
   '/_authenticated/owner/mensagens': typeof AuthenticatedOwnerMensagensRoute
+  '/_authenticated/owner/painel': typeof AuthenticatedOwnerPainelRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -99,6 +109,7 @@ export interface FileRouteTypes {
     | '/acesso/'
     | '/owner/dashboard'
     | '/owner/mensagens'
+    | '/owner/painel'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -108,6 +119,7 @@ export interface FileRouteTypes {
     | '/acesso'
     | '/owner/dashboard'
     | '/owner/mensagens'
+    | '/owner/painel'
   id:
     | '__root__'
     | '/'
@@ -118,6 +130,7 @@ export interface FileRouteTypes {
     | '/acesso/'
     | '/_authenticated/owner/dashboard'
     | '/_authenticated/owner/mensagens'
+    | '/_authenticated/owner/painel'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -187,17 +200,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOwnerMensagensRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/owner/painel': {
+      id: '/_authenticated/owner/painel'
+      path: '/owner/painel'
+      fullPath: '/owner/painel'
+      preLoaderRoute: typeof AuthenticatedOwnerPainelRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedOwnerDashboardRoute: typeof AuthenticatedOwnerDashboardRoute
   AuthenticatedOwnerMensagensRoute: typeof AuthenticatedOwnerMensagensRoute
+  AuthenticatedOwnerPainelRoute: typeof AuthenticatedOwnerPainelRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOwnerDashboardRoute: AuthenticatedOwnerDashboardRoute,
   AuthenticatedOwnerMensagensRoute: AuthenticatedOwnerMensagensRoute,
+  AuthenticatedOwnerPainelRoute: AuthenticatedOwnerPainelRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
