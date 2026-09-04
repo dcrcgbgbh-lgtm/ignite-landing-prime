@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   Zap,
@@ -227,7 +227,7 @@ function LockedVideoModal({
         >
           <Gem size={16} />
           Ver Planos
-        </a>
+        </Link>
       </div>
     </div>
   );
@@ -282,7 +282,7 @@ function Index() {
           style={{ background: "var(--gradient-primary)" }}
         >
           🚀 LIBERAR ACESSO
-        </a>
+        </Link>
 
       </header>
 
@@ -335,7 +335,7 @@ function Index() {
                   className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 skew-x-12 bg-white/25"
                   style={{ animation: "shimmer 2.8s ease-in-out infinite" }}
                 />
-              </a>
+              </Link>
             </div>
           </Reveal>
 
@@ -548,7 +548,7 @@ function Index() {
             >
               <Rocket size={18} />
               🚀 LIBERAR ACESSO
-            </a>
+            </Link>
 
           </div>
         </Reveal>
