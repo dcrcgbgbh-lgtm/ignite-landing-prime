@@ -508,51 +508,55 @@ function Index() {
       )}
 
       {/* FAQ */}
-      <section id="faq" className="relative z-10 px-5 py-24">
-        <div className="mx-auto w-[min(820px,100%)]">
-          <Reveal>
-            <p className="text-center text-xs uppercase tracking-[0.35em] text-primary-glow">
-              FAQ
-            </p>
-            <h2 className="mt-4 text-center font-display text-3xl font-bold sm:text-5xl">
-              Perguntas frequentes
-            </h2>
-          </Reveal>
-          <div className="mt-12 space-y-3">
-            {faqs.map((item, i) => {
-              const isOpen = open === i;
-              return (
-                <Reveal key={item.q} delay={i * 70}>
-                  <div className="glass overflow-hidden rounded-2xl">
-                    <button
-                      type="button"
-                      onClick={() => setOpen(isOpen ? null : i)}
-                      aria-expanded={isOpen}
-                      className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
-                    >
-                      <span className="min-w-0 font-display text-base font-semibold">
-                        {item.q}
-                      </span>
-                      <ChevronDown
-                        size={18}
-                        className={`shrink-0 text-primary-glow transition-transform duration-300 ${
-                          isOpen ? "rotate-180" : ""
-                        }`}
-                      />
-                    </button>
-                    <div
-                      className="grid transition-all duration-500 ease-out"
-                      style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
-                    >
-                      <div className="overflow-hidden">
-                        <p className="px-6 pb-5 text-sm text-muted-foreground">{item.a}</p>
+      {sections['faq'] && (
+        <section id="faq" className="relative z-10 px-5 py-24">
+          <div className="mx-auto w-[min(820px,100%)]">
+            <Reveal>
+              <p className="text-center text-xs uppercase tracking-[0.35em] text-primary-glow">
+                FAQ
+              </p>
+              <h2 className="mt-4 text-center font-display text-3xl font-bold sm:text-5xl">
+                Perguntas frequentes
+              </h2>
+            </Reveal>
+            <div className="mt-12 space-y-3">
+              {(faq.items.length ? faq.items : faqs).map((item, i) => {
+                const isOpen = open === i;
+                return (
+                  <Reveal key={item.q} delay={i * 70}>
+                    <div className="glass overflow-hidden rounded-2xl">
+                      <button
+                        type="button"
+                        onClick={() => setOpen(isOpen ? null : i)}
+                        aria-expanded={isOpen}
+                        className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
+                      >
+                        <span className="min-w-0 font-display text-base font-semibold">
+                          {item.q}
+                        </span>
+                        <ChevronDown
+                          size={18}
+                          className={`shrink-0 text-primary-glow transition-transform duration-300 ${
+                            isOpen ? "rotate-180" : ""
+                          }`}
+                        />
+                      </button>
+                      <div
+                        className="grid transition-all duration-500 ease-out"
+                        style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
+                      >
+                        <div className="overflow-hidden">
+                          <p className="px-6 pb-5 text-sm text-muted-foreground">{item.a}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </Reveal>
-              );
-            })}
+                  </Reveal>
+                );
+              })}
+            </div>
           </div>
+        </section>
+      )}
         </div>
       </section>
 
