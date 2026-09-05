@@ -443,3 +443,62 @@ export const listPurchases = createServerFn({ method: "POST" })
       .limit(50);
     return { purchases: data ?? [] };
   });
+
+// ------------------------------------------------------------------ Asaas Pix
+
+type AsaasPixKey = { id: string; key?: string | null; type?: string | null; status?: string | null };
+
+function asaasConfig(): { url: string; key: string } | null {
+  const key = process.env['ASAAS_API_KEY'];
+  if (!key) return null;
+  const url = process.env['ASAAS_BASE_URL'] ?? "https://api-sandbox.asaas.com/v3";
+  return { url: url.replace(/\/$/, ""), key };
+}
+
+async function asaasFetch(path: string, init?: RequestInit) {
+  const cfg = asaasConfig();
+  if (!cfg) return { connected: false as const };
+  const res = await fetch(`${cfg.url}${path}`, {
+    ...init,
+    headers: {
+      "Content-Type": "application/json",
+      access_token: cfg.key,
+      ...(init?.headers as Record<string, string> | undefined),
+    },
+  });
+  const body = (await res.json().catch(() => null)) as
+    | { data?: AsaasPixKey[]; errors?: { description?: string }[] }
+    | AsaasPixKey
+    | null;
+  if (!res.ok) {
+    const msg =
+      (body as { errors?: { description?: string }[] } | null)?.errors?.[0]?.description ??
+      `Erro Asaas (${res.status})`;
+    throw new Error(msg);
+  }
+  return { connected: true as const, body };
+}
+
+export const listPixKeys = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await requireOwner(context);
+    const res = await asaasFetch("/pix/addressKeys?limit=20");
+    if (!res.connected) return { connected: false, keys: [] as AsaasPixKey[] };
+    const keys = ((res.body as { data?: AsaasPixKey[] } | null)?.data ?? []) as AsaasPixKey[];
+    return { connected: true, keys };
+  });
+
+export const createPixEvpKey = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { db, userId } = await requireOwner(context);
+    const res = await asaasFetch("/pix/addressKeys", {
+      method: "POST",
+      body: JSON.stringify({ type: "EVP" }),
+    });
+    if (!res.connected) throw new Error("Asaas não conectado.");
+    const created = res.body as AsaasPixKey;
+    await audit(db, userId, "create_pix_key", "asaas", { id: created?.id ?? null });
+    return { connected: true, key: created };
+  });
