@@ -239,6 +239,26 @@ function Index() {
   const [open, setOpen] = useState<number | null>(0);
   const [lockedVideo, setLockedVideo] = useState<(typeof exclusiveVideos)[number] | null>(null);
   const [checkoutPlan, setCheckoutPlan] = useState<PlanId | null>(null);
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
+
+  const loadConfig = useServerFn(getPublicConfig);
+
+  useEffect(() => {
+    let alive = true;
+    loadConfig()
+      .then((res) => {
+        if (alive) setSettings(res.settings);
+      })
+      .catch(() => {
+        if (alive) setSettings(defaultSettings);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [loadConfig]);
+
+  const effectiveSettings = settings ?? defaultSettings;
+  const { hero, faq, sections } = effectiveSettings;
 
   const startCheckout = (id: PlanId) => {
     const url = checkoutUrls[id];
