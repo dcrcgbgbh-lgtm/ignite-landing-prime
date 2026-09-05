@@ -33,6 +33,8 @@ import {
   StatCounter,
   OnlineCounter,
 } from "@/components/site/ui";
+import { getPublicConfig } from "@/lib/public.functions";
+import { defaultSettings, type SiteSettings } from "@/lib/site-config";
 
 export const Route = createFileRoute("/")({
   head: () => ({
