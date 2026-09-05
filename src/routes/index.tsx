@@ -382,7 +382,7 @@ function Index() {
       </section>
 
       {/* AVALIAÇÕES */}
-      {sections.reviews && (
+      {sections['reviews'] && (
         <section id="avaliacoes" className="relative z-10 px-5 py-24">
           <div className="mx-auto w-[min(1180px,100%)]">
             <Reveal>
