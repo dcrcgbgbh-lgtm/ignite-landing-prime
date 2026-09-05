@@ -382,33 +382,35 @@ function Index() {
       </section>
 
       {/* AVALIAÇÕES */}
-      <section id="avaliacoes" className="relative z-10 px-5 py-24">
-        <div className="mx-auto w-[min(1180px,100%)]">
-          <Reveal>
-            <p className="text-center text-xs uppercase tracking-[0.35em] text-primary-glow">
-              Avaliações
-            </p>
-            <h2 className="mt-4 text-center font-display text-3xl font-bold sm:text-5xl">
-              Quem baixou, aprovou
-            </h2>
-          </Reveal>
-          <div className="mt-14 grid gap-6 md:grid-cols-3">
-            {reviews.map((r, i) => (
-              <Reveal key={r.author} delay={i * 130}>
-                <figure className="glass glow-hover h-full rounded-3xl p-7">
-                  <Stars />
-                  <blockquote className="mt-5 font-display text-lg leading-snug">
-                    “{r.text}”
-                  </blockquote>
-                  <figcaption className="mt-6 text-xs uppercase tracking-widest text-muted-foreground">
-                    {r.author} · Compra verificada
-                  </figcaption>
-                </figure>
-              </Reveal>
-            ))}
+      {sections.reviews && (
+        <section id="avaliacoes" className="relative z-10 px-5 py-24">
+          <div className="mx-auto w-[min(1180px,100%)]">
+            <Reveal>
+              <p className="text-center text-xs uppercase tracking-[0.35em] text-primary-glow">
+                Avaliações
+              </p>
+              <h2 className="mt-4 text-center font-display text-3xl font-bold sm:text-5xl">
+                Quem baixou, aprovou
+              </h2>
+            </Reveal>
+            <div className="mt-14 grid gap-6 md:grid-cols-3">
+              {reviews.map((r, i) => (
+                <Reveal key={r.author} delay={i * 130}>
+                  <figure className="glass glow-hover h-full rounded-3xl p-7">
+                    <Stars />
+                    <blockquote className="mt-5 font-display text-lg leading-snug">
+                      “{r.text}”
+                    </blockquote>
+                    <figcaption className="mt-6 text-xs uppercase tracking-widest text-muted-foreground">
+                      {r.author} · Compra verificada
+                    </figcaption>
+                  </figure>
+                </Reveal>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* CONTEÚDO EXCLUSIVO */}
       <section id="conteudo-exclusivo" className="relative z-10 px-5 py-24">
