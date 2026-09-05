@@ -502,9 +502,10 @@ function Index() {
                 </div>
               </Reveal>
             ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* FAQ */}
       <section id="faq" className="relative z-10 px-5 py-24">
