@@ -247,7 +247,7 @@ function Index() {
   useEffect(() => {
     let alive = true;
     loadConfig()
-      .then((res) => {
+      .then((res: { settings: SiteSettings }) => {
         if (alive) setSettings(res.settings);
       })
       .catch(() => {
