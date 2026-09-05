@@ -130,6 +130,12 @@ function DashboardPage() {
         </div>
       )}
 
+      <div className="mb-6">
+        <AsaasPixCard />
+      </div>
+
+
+
       {data && (
         <div className="space-y-6">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
