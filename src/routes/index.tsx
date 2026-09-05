@@ -332,13 +332,12 @@ function Index() {
           </Reveal>
           <Reveal delay={100}>
             <h1 className="mt-6 font-display text-4xl font-extrabold leading-[1.05] sm:text-6xl lg:text-7xl">
-              <span className="text-gradient">FF 2022</span>{" "}
-              <span className="text-foreground">Elite</span>
+              <span className="text-gradient">{hero.title}</span>
             </h1>
           </Reveal>
           <Reveal delay={200}>
             <p className="mx-auto mt-5 max-w-xl text-base text-muted-foreground sm:text-lg">
-              O software mais estável, atualizado e completo.
+              {hero.subtitle}
             </p>
           </Reveal>
           <Reveal delay={300}>
@@ -352,7 +351,7 @@ function Index() {
                 }}
               >
                 <Rocket size={18} />
-                🚀 LIBERAR ACESSO
+                {hero.cta}
 
                 <span
                   className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 skew-x-12 bg-white/25"
