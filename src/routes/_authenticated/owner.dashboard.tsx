@@ -39,6 +39,69 @@ const LABELS: [keyof Data["metrics"], string][] = [
   ["events_total", "Eventos totais"],
 ];
 
+type PixState = Awaited<ReturnType<typeof listPixKeys>>;
+
+function AsaasPixCard() {
+  const [state, setState] = useState<PixState | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const load = () =>
+    listPixKeys()
+      .then(setState)
+      .catch((e) => setErr(e instanceof Error ? e.message : "Falha ao consultar as chaves Pix."));
+
+  useEffect(() => {
+    void load();
+  }, []);
+
+  const active = state?.keys.find((k) => k.status === "ACTIVE") ?? null;
+
+  return (
+    <Panel title="Chave Pix do Dashboard">
+      {err && <p className="text-sm text-destructive">{err}</p>}
+      {!state && !err && <Loader2 className="animate-spin text-muted-foreground" size={16} />}
+      {state && !state.connected && (
+        <p className="text-sm text-muted-foreground">
+          Asaas não conectado. Adicione o segredo <code className="font-mono">ASAAS_API_KEY</code> nas
+          configurações do projeto para gerar chaves Pix.
+        </p>
+      )}
+      {state?.connected && (
+        <div className="space-y-3">
+          {active ? (
+            <div className="rounded-xl border border-border/60 bg-card/40 p-3">
+              <p className="break-all font-mono text-xs">{active.key ?? active.id}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {active.type ?? "EVP"} · {active.status}
+              </p>
+            </div>
+          ) : (
+            <>
+              <p className="text-sm text-muted-foreground">Nenhuma chave Pix ativa.</p>
+              <button
+                disabled={busy}
+                onClick={() => {
+                  setBusy(true);
+                  setErr(null);
+                  createPixEvpKey()
+                    .then(() => load())
+                    .catch((e) => setErr(e instanceof Error ? e.message : "Falha ao gerar a chave."))
+                    .finally(() => setBusy(false));
+                }}
+                className="inline-flex items-center gap-2 rounded-lg border border-border/60 px-3 py-2 text-xs disabled:opacity-60"
+              >
+                {busy && <Loader2 className="animate-spin" size={13} />}
+                Gerar chave aleatória
+              </button>
+            </>
+          )}
+        </div>
+      )}
+    </Panel>
+  );
+}
+
 function DashboardPage() {
   const [data, setData] = useState<Data | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -54,6 +117,7 @@ function DashboardPage() {
       alive = false;
     };
   }, []);
+
 
   return (
     <OwnerShell title="Dashboard">
