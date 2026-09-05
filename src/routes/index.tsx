@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import {
   Zap,
@@ -33,6 +34,8 @@ import {
   StatCounter,
   OnlineCounter,
 } from "@/components/site/ui";
+import { getPublicConfig } from "@/lib/public.functions";
+import { defaultSettings, type SiteSettings } from "@/lib/site-config";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -237,6 +240,26 @@ function Index() {
   const [open, setOpen] = useState<number | null>(0);
   const [lockedVideo, setLockedVideo] = useState<(typeof exclusiveVideos)[number] | null>(null);
   const [checkoutPlan, setCheckoutPlan] = useState<PlanId | null>(null);
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
+
+  const loadConfig = useServerFn(getPublicConfig);
+
+  useEffect(() => {
+    let alive = true;
+    loadConfig()
+      .then((res: { settings: SiteSettings }) => {
+        if (alive) setSettings(res.settings);
+      })
+      .catch(() => {
+        if (alive) setSettings(defaultSettings);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [loadConfig]);
+
+  const effectiveSettings = settings ?? defaultSettings;
+  const { hero, faq, sections } = effectiveSettings;
 
   const startCheckout = (id: PlanId) => {
     const url = checkoutUrls[id];
@@ -309,13 +332,12 @@ function Index() {
           </Reveal>
           <Reveal delay={100}>
             <h1 className="mt-6 font-display text-4xl font-extrabold leading-[1.05] sm:text-6xl lg:text-7xl">
-              <span className="text-gradient">FF 2022</span>{" "}
-              <span className="text-foreground">Elite</span>
+              <span className="text-gradient">{hero.title}</span>
             </h1>
           </Reveal>
           <Reveal delay={200}>
             <p className="mx-auto mt-5 max-w-xl text-base text-muted-foreground sm:text-lg">
-              O software mais estável, atualizado e completo.
+              {hero.subtitle}
             </p>
           </Reveal>
           <Reveal delay={300}>
@@ -329,7 +351,7 @@ function Index() {
                 }}
               >
                 <Rocket size={18} />
-                🚀 LIBERAR ACESSO
+                {hero.cta}
 
                 <span
                   className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 skew-x-12 bg-white/25"
@@ -360,108 +382,113 @@ function Index() {
       </section>
 
       {/* AVALIAÇÕES */}
-      <section id="avaliacoes" className="relative z-10 px-5 py-24">
-        <div className="mx-auto w-[min(1180px,100%)]">
-          <Reveal>
-            <p className="text-center text-xs uppercase tracking-[0.35em] text-primary-glow">
-              Avaliações
-            </p>
-            <h2 className="mt-4 text-center font-display text-3xl font-bold sm:text-5xl">
-              Quem baixou, aprovou
-            </h2>
-          </Reveal>
-          <div className="mt-14 grid gap-6 md:grid-cols-3">
-            {reviews.map((r, i) => (
-              <Reveal key={r.author} delay={i * 130}>
-                <figure className="glass glow-hover h-full rounded-3xl p-7">
-                  <Stars />
-                  <blockquote className="mt-5 font-display text-lg leading-snug">
-                    “{r.text}”
-                  </blockquote>
-                  <figcaption className="mt-6 text-xs uppercase tracking-widest text-muted-foreground">
-                    {r.author} · Compra verificada
-                  </figcaption>
-                </figure>
-              </Reveal>
-            ))}
+      {sections['reviews'] && (
+        <section id="avaliacoes" className="relative z-10 px-5 py-24">
+          <div className="mx-auto w-[min(1180px,100%)]">
+            <Reveal>
+              <p className="text-center text-xs uppercase tracking-[0.35em] text-primary-glow">
+                Avaliações
+              </p>
+              <h2 className="mt-4 text-center font-display text-3xl font-bold sm:text-5xl">
+                Quem baixou, aprovou
+              </h2>
+            </Reveal>
+            <div className="mt-14 grid gap-6 md:grid-cols-3">
+              {reviews.map((r, i) => (
+                <Reveal key={r.author} delay={i * 130}>
+                  <figure className="glass glow-hover h-full rounded-3xl p-7">
+                    <Stars />
+                    <blockquote className="mt-5 font-display text-lg leading-snug">
+                      “{r.text}”
+                    </blockquote>
+                    <figcaption className="mt-6 text-xs uppercase tracking-widest text-muted-foreground">
+                      {r.author} · Compra verificada
+                    </figcaption>
+                  </figure>
+                </Reveal>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* CONTEÚDO EXCLUSIVO */}
-      <section id="conteudo-exclusivo" className="relative z-10 px-5 py-24">
-        <div className="mx-auto w-[min(1180px,100%)]">
-          <Reveal>
-            <p className="text-center text-xs uppercase tracking-[0.35em] text-primary-glow">
-              Conteúdo Exclusivo
-            </p>
-            <h2 className="mt-4 text-center font-display text-3xl font-bold sm:text-5xl">
-              Vídeos liberados para assinantes
-            </h2>
-            <p className="mx-auto mt-4 max-w-lg text-center text-sm text-muted-foreground">
-              Todo o acervo fica visível, mas o acesso é liberado somente após a confirmação do
-              pagamento.
-            </p>
-          </Reveal>
+      {sections['exclusive'] && (
+        <section id="conteudo-exclusivo" className="relative z-10 px-5 py-24">
+          <div className="mx-auto w-[min(1180px,100%)]">
+            <Reveal>
+              <p className="text-center text-xs uppercase tracking-[0.35em] text-primary-glow">
+                Conteúdo Exclusivo
+              </p>
+              <h2 className="mt-4 text-center font-display text-3xl font-bold sm:text-5xl">
+                Vídeos liberados para assinantes
+              </h2>
+              <p className="mx-auto mt-4 max-w-lg text-center text-sm text-muted-foreground">
+                Todo o acervo fica visível, mas o acesso é liberado somente após a confirmação do
+                pagamento.
+              </p>
+            </Reveal>
 
-          <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {exclusiveVideos.map((video, i) => (
-              <Reveal key={video.title} delay={i * 90}>
-                <button
-                  type="button"
-                  onClick={() => setLockedVideo(video)}
-                  aria-label={`Conteúdo bloqueado: ${video.title}`}
-                  className="glass glow-hover group block w-full overflow-hidden rounded-3xl p-3 text-left"
-                >
-                  <div className="relative aspect-video overflow-hidden rounded-2xl">
-                    <div
-                      className="absolute inset-0 transition-transform duration-500 group-hover:scale-105"
-                      style={{
-                        background: `radial-gradient(120% 100% at 30% 0%, oklch(0.45 0.18 ${video.tint} / 0.75) 0%, oklch(0.16 0.02 ${video.tint}) 70%)`,
-                      }}
-                    />
-                    <div className="absolute inset-0 backdrop-blur-[3px]" />
-                    <div className="absolute inset-0 grid place-items-center">
-                      <span
-                        className="grid size-14 place-items-center rounded-2xl border border-white/10"
-                        style={{ background: "oklch(0.145 0 0 / 0.55)" }}
-                      >
-                        <Lock size={20} className="text-primary-glow" />
+            <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {exclusiveVideos.map((video, i) => (
+                <Reveal key={video.title} delay={i * 90}>
+                  <button
+                    type="button"
+                    onClick={() => setLockedVideo(video)}
+                    aria-label={`Conteúdo bloqueado: ${video.title}`}
+                    className="glass glow-hover group block w-full overflow-hidden rounded-3xl p-3 text-left"
+                  >
+                    <div className="relative aspect-video overflow-hidden rounded-2xl">
+                      <div
+                        className="absolute inset-0 transition-transform duration-500 group-hover:scale-105"
+                        style={{
+                          background: `radial-gradient(120% 100% at 30% 0%, oklch(0.45 0.18 ${video.tint} / 0.75) 0%, oklch(0.16 0.02 ${video.tint}) 70%)`,
+                        }}
+                      />
+                      <div className="absolute inset-0 backdrop-blur-[3px]" />
+                      <div className="absolute inset-0 grid place-items-center">
+                        <span
+                          className="grid size-14 place-items-center rounded-2xl border border-white/10"
+                          style={{ background: "oklch(0.145 0 0 / 0.55)" }}
+                        >
+                          <Lock size={20} className="text-primary-glow" />
+                        </span>
+                      </div>
+                      <span className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-black/60 px-2.5 py-1 text-[10px] font-bold tracking-widest text-white/80">
+                        <Play size={10} fill="currentColor" strokeWidth={0} />
+                        {video.duration}
                       </span>
                     </div>
-                    <span className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-black/60 px-2.5 py-1 text-[10px] font-bold tracking-widest text-white/80">
-                      <Play size={10} fill="currentColor" strokeWidth={0} />
-                      {video.duration}
-                    </span>
-                  </div>
-                  <div className="flex items-start justify-between gap-3 px-3 py-4">
-                    <h3 className="min-w-0 font-display text-sm font-bold">{video.title}</h3>
-                    <span className="shrink-0 rounded-full bg-secondary px-2.5 py-1 text-[10px] font-bold tracking-widest text-muted-foreground">
-                      BLOQUEADO
-                    </span>
-                  </div>
-                </button>
-              </Reveal>
-            ))}
+                    <div className="flex items-start justify-between gap-3 px-3 py-4">
+                      <h3 className="min-w-0 font-display text-sm font-bold">{video.title}</h3>
+                      <span className="shrink-0 rounded-full bg-secondary px-2.5 py-1 text-[10px] font-bold tracking-widest text-muted-foreground">
+                        BLOQUEADO
+                      </span>
+                    </div>
+                  </button>
+                </Reveal>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
 
 
       {/* DIFERENCIAIS */}
-      <section id="diferenciais" className="relative z-10 px-5 py-24">
-        <div className="mx-auto w-[min(1180px,100%)]">
-          <Reveal>
-            <p className="text-center text-xs uppercase tracking-[0.35em] text-primary-glow">
-              Diferenciais
-            </p>
-            <h2 className="mt-4 text-center font-display text-3xl font-bold sm:text-5xl">
-              Feito para quem exige o melhor
-            </h2>
-          </Reveal>
-          <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {features.map((f, i) => (
+      {sections['features'] && (
+        <section id="diferenciais" className="relative z-10 px-5 py-24">
+          <div className="mx-auto w-[min(1180px,100%)]">
+            <Reveal>
+              <p className="text-center text-xs uppercase tracking-[0.35em] text-primary-glow">
+                Diferenciais
+              </p>
+              <h2 className="mt-4 text-center font-display text-3xl font-bold sm:text-5xl">
+                Feito para quem exige o melhor
+              </h2>
+            </Reveal>
+            <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {features.map((f, i) => (
               <Reveal key={f.title} delay={i * 90}>
                 <div className="glass glow-hover h-full rounded-3xl p-7">
                   <span
@@ -475,56 +502,61 @@ function Index() {
                 </div>
               </Reveal>
             ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* FAQ */}
-      <section id="faq" className="relative z-10 px-5 py-24">
-        <div className="mx-auto w-[min(820px,100%)]">
-          <Reveal>
-            <p className="text-center text-xs uppercase tracking-[0.35em] text-primary-glow">
-              FAQ
-            </p>
-            <h2 className="mt-4 text-center font-display text-3xl font-bold sm:text-5xl">
-              Perguntas frequentes
-            </h2>
-          </Reveal>
-          <div className="mt-12 space-y-3">
-            {faqs.map((item, i) => {
-              const isOpen = open === i;
-              return (
-                <Reveal key={item.q} delay={i * 70}>
-                  <div className="glass overflow-hidden rounded-2xl">
-                    <button
-                      type="button"
-                      onClick={() => setOpen(isOpen ? null : i)}
-                      aria-expanded={isOpen}
-                      className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
-                    >
-                      <span className="min-w-0 font-display text-base font-semibold">
-                        {item.q}
-                      </span>
-                      <ChevronDown
-                        size={18}
-                        className={`shrink-0 text-primary-glow transition-transform duration-300 ${
-                          isOpen ? "rotate-180" : ""
-                        }`}
-                      />
-                    </button>
-                    <div
-                      className="grid transition-all duration-500 ease-out"
-                      style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
-                    >
-                      <div className="overflow-hidden">
-                        <p className="px-6 pb-5 text-sm text-muted-foreground">{item.a}</p>
+      {sections['faq'] && (
+        <section id="faq" className="relative z-10 px-5 py-24">
+          <div className="mx-auto w-[min(820px,100%)]">
+            <Reveal>
+              <p className="text-center text-xs uppercase tracking-[0.35em] text-primary-glow">
+                FAQ
+              </p>
+              <h2 className="mt-4 text-center font-display text-3xl font-bold sm:text-5xl">
+                Perguntas frequentes
+              </h2>
+            </Reveal>
+            <div className="mt-12 space-y-3">
+              {(faq.items.length ? faq.items : faqs).map((item, i) => {
+                const isOpen = open === i;
+                return (
+                  <Reveal key={item.q} delay={i * 70}>
+                    <div className="glass overflow-hidden rounded-2xl">
+                      <button
+                        type="button"
+                        onClick={() => setOpen(isOpen ? null : i)}
+                        aria-expanded={isOpen}
+                        className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
+                      >
+                        <span className="min-w-0 font-display text-base font-semibold">
+                          {item.q}
+                        </span>
+                        <ChevronDown
+                          size={18}
+                          className={`shrink-0 text-primary-glow transition-transform duration-300 ${
+                            isOpen ? "rotate-180" : ""
+                          }`}
+                        />
+                      </button>
+                      <div
+                        className="grid transition-all duration-500 ease-out"
+                        style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
+                      >
+                        <div className="overflow-hidden">
+                          <p className="px-6 pb-5 text-sm text-muted-foreground">{item.a}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </Reveal>
-              );
-            })}
+                  </Reveal>
+                );
+              })}
+            </div>
           </div>
+        </section>
+      )}
         </div>
       </section>
 
