@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { OwnerShell, Panel } from "@/components/owner/OwnerShell";
-import { getDashboard } from "@/lib/owner.functions";
+import { getDashboard, listPixKeys, createPixEvpKey } from "@/lib/owner.functions";
 import { Eye, EyeOff, Loader2, Copy, Check } from "lucide-react";
+
 
 export const Route = createFileRoute("/_authenticated/owner/dashboard")({
   head: () => ({
