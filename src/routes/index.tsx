@@ -476,18 +476,19 @@ function Index() {
 
 
       {/* DIFERENCIAIS */}
-      <section id="diferenciais" className="relative z-10 px-5 py-24">
-        <div className="mx-auto w-[min(1180px,100%)]">
-          <Reveal>
-            <p className="text-center text-xs uppercase tracking-[0.35em] text-primary-glow">
-              Diferenciais
-            </p>
-            <h2 className="mt-4 text-center font-display text-3xl font-bold sm:text-5xl">
-              Feito para quem exige o melhor
-            </h2>
-          </Reveal>
-          <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {features.map((f, i) => (
+      {sections['features'] && (
+        <section id="diferenciais" className="relative z-10 px-5 py-24">
+          <div className="mx-auto w-[min(1180px,100%)]">
+            <Reveal>
+              <p className="text-center text-xs uppercase tracking-[0.35em] text-primary-glow">
+                Diferenciais
+              </p>
+              <h2 className="mt-4 text-center font-display text-3xl font-bold sm:text-5xl">
+                Feito para quem exige o melhor
+              </h2>
+            </Reveal>
+            <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {features.map((f, i) => (
               <Reveal key={f.title} delay={i * 90}>
                 <div className="glass glow-hover h-full rounded-3xl p-7">
                   <span
