@@ -557,8 +557,7 @@ function Index() {
           </div>
         </section>
       )}
-        </div>
-      </section>
+
 
       {/* CTA FINAL */}
       <section className="relative z-10 px-5 pb-24">
