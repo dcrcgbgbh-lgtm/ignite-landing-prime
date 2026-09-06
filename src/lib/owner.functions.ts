@@ -444,61 +444,154 @@ export const listPurchases = createServerFn({ method: "POST" })
     return { purchases: data ?? [] };
   });
 
-// ------------------------------------------------------------------ Asaas Pix
+// ------------------------------------------------------------------ Stripe
 
-type AsaasPixKey = { id: string; key?: string | null; type?: string | null; status?: string | null };
-
-function asaasConfig(): { url: string; key: string } | null {
-  const key = process.env['ASAAS_API_KEY'];
-  if (!key) return null;
-  const url = process.env['ASAAS_BASE_URL'] ?? "https://api-sandbox.asaas.com/v3";
-  return { url: url.replace(/\/$/, ""), key };
-}
-
-async function asaasFetch(path: string, init?: RequestInit) {
-  const cfg = asaasConfig();
-  if (!cfg) return { connected: false as const };
-  const res = await fetch(`${cfg.url}${path}`, {
-    ...init,
+async function stripeFetch<T>(path: string, init?: { method?: string; form?: Record<string, string> }): Promise<T> {
+  const key = process.env['STRIPE_SECRET_KEY'];
+  if (!key) throw new Error("Stripe não conectado. Configure o segredo STRIPE_SECRET_KEY.");
+  const res = await fetch(`https://api.stripe.com${path}`, {
+    method: init?.method ?? "GET",
     headers: {
-      "Content-Type": "application/json",
-      access_token: cfg.key,
-      ...(init?.headers as Record<string, string> | undefined),
+      Authorization: `Bearer ${key}`,
+      ...(init?.form ? { "Content-Type": "application/x-www-form-urlencoded" } : {}),
     },
+    ...(init?.form ? { body: new URLSearchParams(init.form).toString() } : {}),
   });
-  const body = (await res.json().catch(() => null)) as
-    | { data?: AsaasPixKey[]; errors?: { description?: string }[] }
-    | AsaasPixKey
-    | null;
-  if (!res.ok) {
-    const msg =
-      (body as { errors?: { description?: string }[] } | null)?.errors?.[0]?.description ??
-      `Erro Asaas (${res.status})`;
-    throw new Error(msg);
-  }
-  return { connected: true as const, body };
+  const body = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
+  if (!res.ok) throw new Error(body?.error?.message ?? `Erro Stripe (${res.status})`);
+  return body as T;
 }
 
-export const listPixKeys = createServerFn({ method: "POST" })
+type StripeList<T> = { data?: T[] };
+type StripeCharge = {
+  id: string;
+  amount: number;
+  amount_refunded: number;
+  currency: string;
+  created: number;
+  status: string;
+  refunded: boolean;
+  paid: boolean;
+  description?: string | null;
+  receipt_url?: string | null;
+};
+type StripePayout = { id: string; amount: number; currency: string; status: string; arrival_date: number; created: number; method?: string };
+type StripeBalanceAmount = { amount: number; currency: string };
+
+export const getStripeOverview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await requireOwner(context);
-    const res = await asaasFetch("/pix/addressKeys?limit=20");
-    if (!res.connected) return { connected: false, keys: [] as AsaasPixKey[] };
-    const keys = ((res.body as { data?: AsaasPixKey[] } | null)?.data ?? []) as AsaasPixKey[];
-    return { connected: true, keys };
+    const key = process.env['STRIPE_SECRET_KEY'] ?? "";
+    const testMode = !key.startsWith("sk_live_");
+
+    const balance = await stripeFetch<{ available?: StripeBalanceAmount[]; pending?: StripeBalanceAmount[] }>("/v1/balance");
+    const charges = await stripeFetch<StripeList<StripeCharge>>("/v1/charges?limit=100");
+    const payouts = await stripeFetch<StripeList<StripePayout>>("/v1/payouts?limit=50");
+
+    let manualPayouts = false;
+    try {
+      const settings = await stripeFetch<{ payouts?: { schedule?: { interval?: string } } }>("/v1/balance_settings");
+      manualPayouts = settings?.payouts?.schedule?.interval === "manual";
+    } catch {
+      manualPayouts = false;
+    }
+
+    const sum = (list?: StripeBalanceAmount[]) =>
+      (list ?? []).filter((a) => a.currency === "brl").reduce((t, a) => t + a.amount, 0);
+
+    const all = charges.data ?? [];
+    const succeeded = all.filter((c) => c.status === "succeeded" && c.paid);
+    const netTotal = succeeded.reduce((t, c) => t + (c.amount - (c.amount_refunded ?? 0)), 0);
+    const grossTotal = succeeded.reduce((t, c) => t + c.amount, 0);
+
+    const byDay = new Map<string, number>();
+    for (const c of succeeded) {
+      const d = new Date(c.created * 1000).toISOString().slice(0, 10);
+      byDay.set(d, (byDay.get(d) ?? 0) + (c.amount - (c.amount_refunded ?? 0)));
+    }
+    let bestDay: { date: string; amount: number } | null = null;
+    for (const [date, amount] of byDay) if (!bestDay || amount > bestDay.amount) bestDay = { date, amount };
+
+    const biggest = succeeded.reduce<StripeCharge | null>((m, c) => (!m || c.amount > m.amount ? c : m), null);
+    const latest = succeeded.reduce<StripeCharge | null>((m, c) => (!m || c.created > m.created ? c : m), null);
+
+    return {
+      testMode,
+      manualPayouts,
+      availableBrl: sum(balance.available),
+      pendingBrl: sum(balance.pending),
+      approvedCount: succeeded.length,
+      totalCount: all.length,
+      receivedBrl: netTotal,
+      grossBrl: grossTotal,
+      averageTicket: succeeded.length ? Math.round(netTotal / succeeded.length) : 0,
+      bestDay,
+      biggest: biggest ? { amount: biggest.amount, created: biggest.created } : null,
+      latest: latest ? { amount: latest.amount, created: latest.created } : null,
+      charges: all.slice(0, 25).map((c) => ({
+        id: c.id,
+        amount: c.amount,
+        refunded: c.amount_refunded ?? 0,
+        status: c.status,
+        created: c.created,
+        currency: c.currency,
+        description: c.description ?? null,
+      })),
+      payouts: (payouts.data ?? []).map((p) => ({
+        id: p.id,
+        amount: p.amount,
+        currency: p.currency,
+        status: p.status,
+        arrival_date: p.arrival_date,
+        created: p.created,
+      })),
+    };
   });
 
-export const createPixEvpKey = createServerFn({ method: "POST" })
+export const createStripeTestCharge = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator((input: { amountCents: number; origin: string }) => input)
+  .handler(async ({ data, context }) => {
     const { db, userId } = await requireOwner(context);
-    const res = await asaasFetch("/pix/addressKeys", {
+    const amount = Math.round(Number(data.amountCents));
+    if (!Number.isFinite(amount) || amount < 50) throw new Error("Valor mínimo é R$ 0,50.");
+    let origin: string;
+    try {
+      const u = new URL(data.origin);
+      if (u.protocol !== "https:" && u.hostname !== "localhost") throw new Error("bad");
+      origin = u.origin;
+    } catch {
+      throw new Error("Origem inválida.");
+    }
+    const session = await stripeFetch<{ id: string; url?: string }>("/v1/checkout/sessions", {
       method: "POST",
-      body: JSON.stringify({ type: "EVP" }),
+      form: {
+        mode: "payment",
+        success_url: `${origin}/owner/dashboard?stripe=success`,
+        cancel_url: `${origin}/owner/dashboard?stripe=cancel`,
+        "line_items[0][quantity]": "1",
+        "line_items[0][price_data][currency]": "brl",
+        "line_items[0][price_data][unit_amount]": String(amount),
+        "line_items[0][price_data][product_data][name]": "Cobrança de teste OWNER",
+      },
     });
-    if (!res.connected) throw new Error("Asaas não conectado.");
-    const created = res.body as AsaasPixKey;
-    await audit(db, userId, "create_pix_key", "asaas", { id: created?.id ?? null });
-    return { connected: true, key: created };
+    await audit(db, userId, "stripe_test_charge", "stripe", { amount, id: session.id });
+    return { url: session.url ?? null };
   });
+
+export const createStripePayout = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { amountCents: number }) => input)
+  .handler(async ({ data, context }) => {
+    const { db, userId } = await requireOwner(context);
+    const amount = Math.round(Number(data.amountCents));
+    if (!Number.isFinite(amount) || amount <= 0) throw new Error("Valor inválido.");
+    const payout = await stripeFetch<{ id: string; status: string }>("/v1/payouts", {
+      method: "POST",
+      form: { amount: String(amount), currency: "brl" },
+    });
+    await audit(db, userId, "stripe_payout", "stripe", { amount, id: payout.id });
+    return { id: payout.id, status: payout.status };
+  });
+

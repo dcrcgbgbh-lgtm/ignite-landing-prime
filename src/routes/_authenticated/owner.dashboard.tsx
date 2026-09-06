@@ -1,8 +1,14 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { OwnerShell, Panel } from "@/components/owner/OwnerShell";
-import { getDashboard, listPixKeys, createPixEvpKey } from "@/lib/owner.functions";
-import { Eye, EyeOff, Loader2, Copy, Check } from "lucide-react";
+import {
+  getDashboard,
+  getStripeOverview,
+  createStripeTestCharge,
+  createStripePayout,
+} from "@/lib/owner.functions";
+import { Eye, EyeOff, Loader2, Copy, Check, RefreshCw } from "lucide-react";
+
 
 
 export const Route = createFileRoute("/_authenticated/owner/dashboard")({
@@ -39,66 +45,187 @@ const LABELS: [keyof Data["metrics"], string][] = [
   ["events_total", "Eventos totais"],
 ];
 
-type PixState = Awaited<ReturnType<typeof listPixKeys>>;
+type StripeState = Awaited<ReturnType<typeof getStripeOverview>>;
 
-function AsaasPixCard() {
-  const [state, setState] = useState<PixState | null>(null);
+const brl = (cents: number) =>
+  (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const dt = (unix: number) => new Date(unix * 1000).toLocaleString("pt-BR");
+
+function StripeSection() {
+  const [s, setS] = useState<StripeState | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [amount, setAmount] = useState("5,00");
   const [busy, setBusy] = useState(false);
+  const [payoutBusy, setPayoutBusy] = useState(false);
+  const alive = useRef(true);
 
-  const load = () =>
-    listPixKeys()
-      .then(setState)
-      .catch((e) => setErr(e instanceof Error ? e.message : "Falha ao consultar as chaves Pix."));
-
-  useEffect(() => {
-    void load();
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const r = await getStripeOverview();
+      if (alive.current) {
+        setS(r);
+        setErr(null);
+      }
+    } catch (e) {
+      if (alive.current) setErr(e instanceof Error ? e.message : "Falha ao consultar a Stripe.");
+    } finally {
+      if (alive.current) setLoading(false);
+    }
   }, []);
 
-  const active = state?.keys.find((k) => k.status === "ACTIVE") ?? null;
+  useEffect(() => {
+    alive.current = true;
+    void load();
+    const t = setInterval(() => void load(), 15000);
+    return () => {
+      alive.current = false;
+      clearInterval(t);
+    };
+  }, [load]);
+
+  const cards: [string, string][] = s
+    ? [
+        ["Vendas aprovadas", String(s.approvedCount)],
+        ["Total de vendas", String(s.totalCount)],
+        ["Valor recebido", brl(s.receivedBrl)],
+        ["Saldo disponível", brl(s.availableBrl)],
+        ["Saldo pendente", brl(s.pendingBrl)],
+        ["Melhor dia", s.bestDay ? `${new Date(s.bestDay.date).toLocaleDateString("pt-BR")} · ${brl(s.bestDay.amount)}` : "—"],
+      ]
+    : [];
 
   return (
-    <Panel title="Chave Pix do Dashboard">
-      {err && <p className="text-sm text-destructive">{err}</p>}
-      {!state && !err && <Loader2 className="animate-spin text-muted-foreground" size={16} />}
-      {state && !state.connected && (
-        <p className="text-sm text-muted-foreground">
-          Asaas não conectado. Adicione o segredo <code className="font-mono">ASAAS_API_KEY</code> nas
-          configurações do projeto para gerar chaves Pix.
-        </p>
-      )}
-      {state?.connected && (
-        <div className="space-y-3">
-          {active ? (
-            <div className="rounded-xl border border-border/60 bg-card/40 p-3">
-              <p className="break-all font-mono text-xs">{active.key ?? active.id}</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {active.type ?? "EVP"} · {active.status}
-              </p>
-            </div>
-          ) : (
-            <>
-              <p className="text-sm text-muted-foreground">Nenhuma chave Pix ativa.</p>
-              <button
-                disabled={busy}
-                onClick={() => {
-                  setBusy(true);
-                  setErr(null);
-                  createPixEvpKey()
-                    .then(() => load())
-                    .catch((e) => setErr(e instanceof Error ? e.message : "Falha ao gerar a chave."))
-                    .finally(() => setBusy(false));
-                }}
-                className="inline-flex items-center gap-2 rounded-lg border border-border/60 px-3 py-2 text-xs disabled:opacity-60"
-              >
-                {busy && <Loader2 className="animate-spin" size={13} />}
-                Gerar chave aleatória
-              </button>
-            </>
+    <div className="space-y-6">
+      <Panel title="Stripe">
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          {s?.testMode && (
+            <span className="rounded-full border border-amber-500/50 bg-amber-500/10 px-2.5 py-1 text-[11px] font-semibold text-amber-400">
+              MODO TESTE — valores não são dinheiro real
+            </span>
           )}
+          <button
+            onClick={() => void load()}
+            className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-border/60 px-2.5 py-1.5 text-xs"
+          >
+            <RefreshCw size={13} className={loading ? "animate-spin" : ""} /> Atualizar
+          </button>
         </div>
+        {err && <p className="text-sm text-destructive">{err}</p>}
+        {!s && !err && <Loader2 className="animate-spin text-muted-foreground" size={16} />}
+        {s && (
+          <>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {cards.map(([label, value]) => (
+                <div key={label} className="rounded-2xl border border-border/60 bg-card/40 p-4">
+                  <p className="text-xs text-muted-foreground">{label}</p>
+                  <p className="mt-1 font-display text-xl font-bold">{value}</p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 grid gap-2 text-sm text-muted-foreground sm:grid-cols-3">
+              <p>Maior venda: {s.biggest ? brl(s.biggest.amount) : "—"}</p>
+              <p>Ticket médio: {brl(s.averageTicket)}</p>
+              <p>Venda mais recente: {s.latest ? `${brl(s.latest.amount)} · ${dt(s.latest.created)}` : "—"}</p>
+            </div>
+          </>
+        )}
+      </Panel>
+
+      {s && (
+        <Panel title="Histórico de pagamentos">
+          {s.charges.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhum pagamento registrado.</p>
+          ) : (
+            <ul className="divide-y divide-border/50 text-sm">
+              {s.charges.map((c) => (
+                <li key={c.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
+                  <span className="font-medium">{brl(c.amount)}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {c.status}
+                    {c.refunded > 0 ? ` · reembolsado ${brl(c.refunded)}` : ""}
+                  </span>
+                  <span className="text-xs text-muted-foreground">{dt(c.created)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Panel>
       )}
-    </Panel>
+
+      {s && (
+        <Panel title="Histórico de retiradas">
+          {!s.manualPayouts && (
+            <p className="mb-3 text-xs text-muted-foreground">Repasses automáticos pela Stripe.</p>
+          )}
+          {s.manualPayouts && s.availableBrl > 0 && (
+            <button
+              disabled={payoutBusy}
+              onClick={() => {
+                if (!window.confirm(`Enviar ${brl(s.availableBrl)} para a conta bancária padrão da Stripe?`)) return;
+                setPayoutBusy(true);
+                createStripePayout({ data: { amountCents: s.availableBrl } })
+                  .then(() => load())
+                  .catch((e: unknown) => setErr(e instanceof Error ? e.message : "Falha ao solicitar o repasse."))
+                  .finally(() => setPayoutBusy(false));
+              }}
+              className="mb-3 inline-flex items-center gap-2 rounded-lg border border-border/60 px-3 py-2 text-xs disabled:opacity-60"
+            >
+              {payoutBusy && <Loader2 className="animate-spin" size={13} />}
+              Sacar saldo disponível
+            </button>
+          )}
+          {s.payouts.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhum repasse registrado.</p>
+          ) : (
+            <ul className="divide-y divide-border/50 text-sm">
+              {s.payouts.map((p) => (
+                <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
+                  <span className="font-medium">{brl(p.amount)}</span>
+                  <span className="text-xs text-muted-foreground">{p.status}</span>
+                  <span className="text-xs text-muted-foreground">{dt(p.arrival_date)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Panel>
+      )}
+
+      <Panel title="Cobrança de teste Stripe">
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            inputMode="decimal"
+            placeholder="R$ 5,00"
+            className="w-32 rounded-lg border border-border/60 bg-card/40 px-3 py-2 text-sm"
+          />
+          <button
+            disabled={busy}
+            onClick={() => {
+              const cents = Math.round(Number(amount.replace(/\./g, "").replace(",", ".")) * 100);
+              if (!Number.isFinite(cents) || cents < 50) {
+                setErr("Valor mínimo é R$ 0,50.");
+                return;
+              }
+              setBusy(true);
+              setErr(null);
+              createStripeTestCharge({ data: { amountCents: cents, origin: window.location.origin } })
+                .then((r) => {
+                  if (r.url) window.open(r.url, "_blank", "noopener");
+                })
+                .catch((e: unknown) => setErr(e instanceof Error ? e.message : "Falha ao gerar a cobrança."))
+                .finally(() => setBusy(false));
+            }}
+            className="inline-flex items-center gap-2 rounded-lg border border-border/60 px-3 py-2 text-xs disabled:opacity-60"
+          >
+            {busy && <Loader2 className="animate-spin" size={13} />}
+            Gerar cobrança
+          </button>
+        </div>
+      </Panel>
+    </div>
   );
 }
 
@@ -131,8 +258,9 @@ function DashboardPage() {
       )}
 
       <div className="mb-6">
-        <AsaasPixCard />
+        <StripeSection />
       </div>
+
 
 
 
