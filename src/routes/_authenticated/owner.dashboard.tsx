@@ -211,7 +211,7 @@ function StripeSection() {
               }
               setBusy(true);
               setErr(null);
-              createStripeTestCharge({ data: { cents, origin: window.location.origin } as never })
+              createStripeTestCharge({ data: { amountCents: cents, origin: window.location.origin } })
                 .then((r) => {
                   if (r.url) window.open(r.url, "_blank", "noopener");
                 })
