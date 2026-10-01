@@ -57,7 +57,7 @@ function AcessoPage() {
   const access = (settings ?? defaultSettings).access;
 
   return (
-    <AccessShell>
+    <AccessShell siteName={settings?.branding.site_name}>
       <Reveal>
         <p className="text-center text-xs uppercase tracking-[0.35em] text-primary-glow">
           Liberar acesso

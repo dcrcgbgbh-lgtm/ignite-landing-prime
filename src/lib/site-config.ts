@@ -46,7 +46,17 @@ export type BotMessages = {
 export type FaqSettings = { items: { q: string; a: string }[] };
 export type SectionsSettings = Record<string, boolean>;
 
+export type BrandingSettings = { site_name: string };
+export type SupportSettings = {
+  whatsapp_url: string; whatsapp_label: string; whatsapp_enabled: boolean;
+  tiktok_url: string; tiktok_label: string; tiktok_enabled: boolean;
+  instagram_url: string; instagram_label: string; instagram_enabled: boolean;
+  show_in_free_access: boolean; show_in_paid_access: boolean; show_in_chat: boolean;
+};
+
 export type SiteSettings = {
+  branding: BrandingSettings;
+  support: SupportSettings;
   hero: HeroSettings;
   access: AccessSettings;
   free_access: FreeAccessSettings;
@@ -56,6 +66,13 @@ export type SiteSettings = {
 };
 
 export const defaultSettings: SiteSettings = {
+  branding: { site_name: "FF 2022 Elite" },
+  support: {
+    whatsapp_url: "", whatsapp_label: "WhatsApp", whatsapp_enabled: true,
+    tiktok_url: "", tiktok_label: "TikTok", tiktok_enabled: true,
+    instagram_url: "", instagram_label: "Instagram", instagram_enabled: true,
+    show_in_free_access: true, show_in_paid_access: true, show_in_chat: true,
+  },
   hero: {
     title: "FF 2022 Elite",
     subtitle: "O software mais estável, atualizado e completo.",

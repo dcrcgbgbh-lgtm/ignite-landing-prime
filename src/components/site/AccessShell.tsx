@@ -4,7 +4,7 @@ import { ArrowLeft, Flame, Play } from "lucide-react";
 import { Particles } from "@/components/site/Particles";
 import type { AccessSettings } from "@/lib/site-config";
 
-export function AccessShell({ children }: { children: ReactNode }) {
+export function AccessShell({ children, siteName }: { children: ReactNode; siteName?: string }) {
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-background text-foreground">
       <Particles />
@@ -17,7 +17,7 @@ export function AccessShell({ children }: { children: ReactNode }) {
           >
             <Flame size={16} className="text-primary-foreground" />
           </span>
-          <span className="truncate font-display text-sm font-bold">FF 2022 Elite</span>
+          <span className="truncate font-display text-sm font-bold">{siteName || "FF 2022 Elite"}</span>
         </Link>
         <Link
           to="/"
