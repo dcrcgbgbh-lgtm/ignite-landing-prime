@@ -286,7 +286,7 @@ function Index() {
           >
             <Flame size={16} className="text-primary-foreground" />
           </span>
-          <span className="truncate font-display text-sm font-bold">FF 2022 Elite</span>
+          <span className="truncate font-display text-sm font-bold">{effectiveSettings.branding.site_name}</span>
         </div>
         <nav className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">
           <a href="#avaliacoes" className="transition-colors hover:text-foreground">
@@ -596,7 +596,7 @@ function Index() {
               >
                 <Flame size={16} className="text-primary-foreground" />
               </span>
-              <span className="font-display text-sm font-bold">FF 2022 Elite</span>
+              <span className="font-display text-sm font-bold">{effectiveSettings.branding.site_name}</span>
             </div>
             <p className="mt-4 max-w-md text-xs text-muted-foreground">
               © 2026 Todos os direitos reservados. Este site não possui vínculo oficial com

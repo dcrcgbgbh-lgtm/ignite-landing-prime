@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Gem, ImagePlus, Loader2, Send } from "lucide-react";
 import { AccessShell } from "@/components/site/AccessShell";
 import {
+  getPublicConfig,
   markWentToPaid,
   pollChat,
   sendChatImage,
@@ -11,7 +12,8 @@ import {
   startChat,
   trackEvent,
 } from "@/lib/public.functions";
-import type { ChatMessage } from "@/lib/site-config";
+import type { ChatMessage, SiteSettings } from "@/lib/site-config";
+import { SupportLinks, Linkify } from "@/components/site/SupportLinks";
 import { getSessionId, greetingKey } from "@/lib/session";
 
 export const Route = createFileRoute("/acesso/gratis")({
@@ -42,6 +44,12 @@ function AcessoGratisPage() {
   const poll = useServerFn(pollChat);
   const wentToPaid = useServerFn(markWentToPaid);
   const track = useServerFn(trackEvent);
+  const loadConfig = useServerFn(getPublicConfig);
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
+
+  useEffect(() => {
+    loadConfig().then((r) => setSettings(r.settings)).catch(() => {});
+  }, [loadConfig]);
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [booting, setBooting] = useState(true);
@@ -133,7 +141,7 @@ function AcessoGratisPage() {
   };
 
   return (
-    <AccessShell>
+    <AccessShell siteName={settings?.branding.site_name}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.35em] text-primary-glow">Acesso grátis</p>
@@ -151,6 +159,11 @@ function AcessoGratisPage() {
           Quero ver o acesso pago
         </Link>
       </div>
+
+      {settings &&
+        (settings.support.show_in_free_access || settings.support.show_in_chat) && (
+          <SupportLinks support={settings.support} className="mt-5" />
+        )}
 
       <section
         className="glass mt-6 flex h-[68vh] min-h-[420px] flex-col overflow-hidden rounded-3xl"
@@ -179,7 +192,7 @@ function AcessoGratisPage() {
                         className="mb-2 max-h-64 w-full rounded-xl object-contain"
                       />
                     )}
-                    {m.content}
+                    <Linkify text={m.content} />
                   </div>
                 </div>
               );

@@ -29,7 +29,7 @@ export const Route = createFileRoute("/_authenticated/owner/painel")({
 type Config = Awaited<ReturnType<typeof getAdminConfig>>;
 type Row = Record<string, unknown>;
 
-const TABS = ["Hero", "Acesso e vídeo", "Bot", "Regras", "Planos", "FAQ", "Seções", "Auditoria"] as const;
+const TABS = ["Hero", "Acesso e vídeo", "Bot", "Regras", "Planos", "FAQ", "Seções", "Auditoria", "Suporte"] as const;
 
 function Field({
   label,
@@ -158,6 +158,19 @@ function PainelPage() {
           {msg}
         </p>
       )}
+
+      {tab === "Hero" && (
+        <Panel title="Nome do site" actions={<SaveBtn onClick={() => void persist("branding")} />}>
+          <Field
+            label="Nome do site no topo"
+            value={s.branding.site_name}
+            onChange={(v) => patch("branding", { ...s.branding, site_name: v })}
+          />
+          <p className="mt-2 text-xs text-muted-foreground">Aparece no topo e rodapé. Não altera o título principal.</p>
+        </Panel>
+      )}
+
+      {tab === "Hero" && <div className="h-4" />}
 
       {tab === "Hero" && (
         <Panel title="Hero e CTA" actions={<SaveBtn onClick={() => void persist("hero")} />}>
@@ -526,6 +539,52 @@ function PainelPage() {
                 {k}
               </label>
             ))}
+          </div>
+        </Panel>
+      )}
+
+      {tab === "Suporte" && (
+        <Panel title="Canais de suporte" actions={<SaveBtn onClick={() => void persist("support")} />}>
+          <div className="space-y-5">
+            {(["whatsapp", "tiktok", "instagram"] as const).map((c) => (
+              <div key={c} className="grid gap-3 rounded-xl border border-border/50 p-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+                <Field
+                  label={`URL ${c}`}
+                  value={s.support[`${c}_url`]}
+                  onChange={(v) => patch("support", { ...s.support, [`${c}_url`]: v })}
+                />
+                <Field
+                  label="Rótulo"
+                  value={s.support[`${c}_label`]}
+                  onChange={(v) => patch("support", { ...s.support, [`${c}_label`]: v })}
+                />
+                <label className="flex items-center gap-2 pb-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={s.support[`${c}_enabled`]}
+                    onChange={(e) => patch("support", { ...s.support, [`${c}_enabled`]: e.target.checked })}
+                  />
+                  Ativo
+                </label>
+              </div>
+            ))}
+            <div className="grid gap-2 sm:grid-cols-3">
+              {([
+                ["show_in_free_access", "Mostrar no acesso grátis"],
+                ["show_in_chat", "Mostrar no chat"],
+                ["show_in_paid_access", "Mostrar na página de compra"],
+              ] as const).map(([k, l]) => (
+                <label key={k} className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={s.support[k]}
+                    onChange={(e) => patch("support", { ...s.support, [k]: e.target.checked })}
+                  />
+                  {l}
+                </label>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">Canais com URL vazia não aparecem no site, mesmo ativos.</p>
           </div>
         </Panel>
       )}

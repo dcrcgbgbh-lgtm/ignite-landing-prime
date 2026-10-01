@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Check, Crown, Flame, Loader2 } from "lucide-react";
 import { AccessShell, AccessVideoCard } from "@/components/site/AccessShell";
+import { SupportLinks } from "@/components/site/SupportLinks";
 import { PlanCheckoutModal } from "@/components/site/PlanCheckoutModal";
 import { Reveal } from "@/components/site/ui";
 import { getPublicConfig, trackEvent } from "@/lib/public.functions";
@@ -73,7 +74,7 @@ function AcessoPagoPage() {
   const access = (settings ?? defaultSettings).access;
 
   return (
-    <AccessShell>
+    <AccessShell siteName={settings?.branding.site_name}>
       <Reveal>
         <p className="text-center text-xs uppercase tracking-[0.35em] text-primary-glow">
           Acesso pago
@@ -100,6 +101,10 @@ function AcessoPagoPage() {
             <p className="mt-6 rounded-2xl border border-border/60 p-3 text-center text-xs text-muted-foreground">
               {error}
             </p>
+          )}
+
+          {settings.support.show_in_paid_access && (
+            <SupportLinks support={settings.support} className="mt-6" />
           )}
 
           <div className="mt-10 flex flex-col gap-6">
