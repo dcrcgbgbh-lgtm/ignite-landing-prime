@@ -4,7 +4,7 @@ import { ArrowLeft, Flame, Play } from "lucide-react";
 import { Particles } from "@/components/site/Particles";
 import type { AccessSettings } from "@/lib/site-config";
 
-export function AccessShell({ children, siteName }: { children: ReactNode; siteName?: string }) {
+export function AccessShell({ children, siteName }: { children: ReactNode; siteName?: string | undefined }) {
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-background text-foreground">
       <Particles />
