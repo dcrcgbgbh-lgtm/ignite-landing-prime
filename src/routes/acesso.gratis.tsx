@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Gem, ImagePlus, Loader2, Send } from "lucide-react";
+import { Gem, ImagePlus, Loader2, Send, MessageCircle } from "lucide-react";
 import { AccessShell } from "@/components/site/AccessShell";
 import {
   getPublicConfig,
@@ -12,7 +12,7 @@ import {
   startChat,
   trackEvent,
 } from "@/lib/public.functions";
-import type { ChatMessage, SiteSettings } from "@/lib/site-config";
+import { defaultSettings, type ChatMessage, type SiteSettings } from "@/lib/site-config";
 import { SupportLinks, Linkify } from "@/components/site/SupportLinks";
 import { getSessionId, greetingKey } from "@/lib/session";
 
@@ -48,7 +48,15 @@ function AcessoGratisPage() {
   const [settings, setSettings] = useState<SiteSettings | null>(null);
 
   useEffect(() => {
-    loadConfig().then((r) => setSettings(r.settings)).catch(() => {});
+    let alive = true;
+    const refresh = () => {
+      loadConfig()
+        .then((r) => { if (alive) setSettings(r.settings); })
+        .catch(() => { if (alive) setSettings((current) => current ?? defaultSettings); });
+    };
+    refresh();
+    const timer = window.setInterval(refresh, 15000);
+    return () => { alive = false; window.clearInterval(timer); };
   }, [loadConfig]);
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -67,8 +75,14 @@ function AcessoGratisPage() {
   useEffect(() => {
     let alive = true;
     const sessionId = getSessionId();
-    if (!sessionId) return;
+    if (!sessionId || !settings) return;
+    if (!settings.chat.enabled) {
+      setMessages([]);
+      setBooting(false);
+      return;
+    }
 
+    setBooting(true);
     void track({ data: { sessionId, eventType: "free_access" } }).catch(() => {});
     void track({ data: { sessionId, eventType: "chat_started" } }).catch(() => {});
 
@@ -87,7 +101,13 @@ function AcessoGratisPage() {
     const timer = window.setInterval(() => {
       poll({ data: { sessionId } })
         .then((res) => {
-          if (alive && res.messages.length) setMessages(res.messages);
+          if (!alive) return;
+          if (res.closed) {
+            setMessages([]);
+            setSettings((current) => current ? { ...current, chat: { ...current.chat, enabled: false } } : current);
+          } else if (res.messages.length) {
+            setMessages(res.messages);
+          }
         })
         .catch(() => {});
     }, 8000);
@@ -96,7 +116,7 @@ function AcessoGratisPage() {
       alive = false;
       window.clearInterval(timer);
     };
-  }, [start, poll, track]);
+  }, [start, poll, track, settings?.chat.enabled]);
 
   useEffect(() => {
     scrollToEnd();
@@ -104,7 +124,7 @@ function AcessoGratisPage() {
 
   const onSend = async () => {
     const content = text.trim();
-    if (!content || sending) return;
+    if (!content || sending || !settings?.chat.enabled) return;
     setSending(true);
     setError(null);
     try {
@@ -119,6 +139,7 @@ function AcessoGratisPage() {
   };
 
   const onPickImage = async (file: File) => {
+    if (!settings?.chat.enabled) return;
     setSending(true);
     setError(null);
     try {
@@ -160,11 +181,12 @@ function AcessoGratisPage() {
         </Link>
       </div>
 
-      {settings &&
+      {settings?.chat.enabled &&
         (settings.support.show_in_free_access || settings.support.show_in_chat) && (
           <SupportLinks support={settings.support} className="mt-5" />
         )}
 
+      {!settings || settings.chat.enabled ? (
       <section
         className="glass mt-6 flex h-[68vh] min-h-[420px] flex-col overflow-hidden rounded-3xl"
         style={{ boxShadow: "var(--shadow-elegant)" }}
@@ -249,6 +271,16 @@ function AcessoGratisPage() {
           </button>
         </div>
       </section>
+      ) : (
+        <section className="glass mt-6 flex flex-col items-center rounded-3xl px-5 py-10 text-center sm:px-8" style={{ boxShadow: "var(--shadow-elegant)" }} aria-live="polite">
+          <span className="grid size-14 place-items-center rounded-2xl border border-border/60 bg-secondary/60">
+            <MessageCircle size={24} className="text-muted-foreground" />
+          </span>
+          <h2 className="mt-4 font-display text-lg font-bold">Atendimento temporariamente fechado</h2>
+          <p className="mt-2 max-w-xl whitespace-pre-line text-sm leading-relaxed text-muted-foreground">{settings.chat.closed_message}</p>
+          {settings.support.show_in_chat && <SupportLinks support={settings.support} channels={["tiktok", "whatsapp"]} className="mt-6" />}
+        </section>
+      )}
     </AccessShell>
   );
 }

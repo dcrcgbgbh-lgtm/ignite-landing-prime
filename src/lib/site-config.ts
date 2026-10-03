@@ -47,6 +47,7 @@ export type FaqSettings = { items: { q: string; a: string }[] };
 export type SectionsSettings = Record<string, boolean>;
 
 export type BrandingSettings = { site_name: string };
+export type ChatSettings = { enabled: boolean; closed_message: string };
 export type SupportSettings = {
   whatsapp_url: string; whatsapp_label: string; whatsapp_enabled: boolean;
   tiktok_url: string; tiktok_label: string; tiktok_enabled: boolean;
@@ -56,6 +57,7 @@ export type SupportSettings = {
 
 export type SiteSettings = {
   branding: BrandingSettings;
+  chat: ChatSettings;
   support: SupportSettings;
   hero: HeroSettings;
   access: AccessSettings;
@@ -67,6 +69,11 @@ export type SiteSettings = {
 
 export const defaultSettings: SiteSettings = {
   branding: { site_name: "FF 2022 Elite" },
+  chat: {
+    enabled: false,
+    closed_message:
+      "O chat está temporariamente fechado. Caso esteja com dificuldades em alguma etapa, converse comigo no TikTok. Se não conseguir mandar mensagem pelo TikTok, fale comigo pelo WhatsApp.",
+  },
   support: {
     whatsapp_url: "", whatsapp_label: "WhatsApp", whatsapp_enabled: true,
     tiktok_url: "", tiktok_label: "TikTok", tiktok_enabled: true,

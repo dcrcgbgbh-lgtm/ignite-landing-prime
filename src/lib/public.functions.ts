@@ -163,6 +163,9 @@ export const startChat = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const db = await admin();
     const settings = await loadSettings(db);
+    if (!settings.chat.enabled) {
+      return { conversationId: null, messages: [] as ChatMessage[], settings, closed: true };
+    }
 
     let { data: conversation } = await db
       .from("conversations")
@@ -242,6 +245,8 @@ export const sendChatMessage = createServerFn({ method: "POST" })
   })
   .handler(async ({ data }) => {
     const db = await admin();
+    const settings = await loadSettings(db);
+    if (!settings.chat.enabled) throw new Error(settings.chat.closed_message);
     const { data: conversation } = await db
       .from("conversations")
       .select("id, stage")
@@ -307,6 +312,8 @@ export const sendChatImage = createServerFn({ method: "POST" })
   })
   .handler(async ({ data }) => {
     const db = await admin();
+    const settings = await loadSettings(db);
+    if (!settings.chat.enabled) throw new Error(settings.chat.closed_message);
     const { data: conversation } = await db
       .from("conversations")
       .select("id")
@@ -330,7 +337,6 @@ export const sendChatImage = createServerFn({ method: "POST" })
       image_url: path,
     });
 
-    const settings = await loadSettings(db);
     await db.from("messages").insert({
       conversation_id: conversation.id,
       sender: "bot",
@@ -359,13 +365,15 @@ export const pollChat = createServerFn({ method: "POST" })
   })
   .handler(async ({ data }) => {
     const db = await admin();
+    const settings = await loadSettings(db);
+    if (!settings.chat.enabled) return { messages: [] as ChatMessage[], closed: true };
     const { data: conversation } = await db
       .from("conversations")
       .select("id")
       .eq("session_id", data.sessionId)
       .maybeSingle();
-    if (!conversation) return { messages: [] as ChatMessage[] };
-    return { messages: await listMessages(db, conversation.id) };
+    if (!conversation) return { messages: [] as ChatMessage[], closed: false };
+    return { messages: await listMessages(db, conversation.id), closed: false };
   });
 
 export const markWentToPaid = createServerFn({ method: "POST" })

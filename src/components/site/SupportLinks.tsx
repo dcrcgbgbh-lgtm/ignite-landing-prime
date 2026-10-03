@@ -3,14 +3,16 @@ import { Instagram, MessageCircle, Music2 } from "lucide-react";
 import type { SupportSettings } from "@/lib/site-config";
 
 const CHANNELS = [
-  { key: "whatsapp", icon: MessageCircle },
-  { key: "tiktok", icon: Music2 },
-  { key: "instagram", icon: Instagram },
+  { key: "whatsapp", icon: MessageCircle, iconClass: "text-[#25D366]" },
+  { key: "tiktok", icon: Music2, iconClass: "text-white drop-shadow-[1px_1px_0_#8b5cf6] [filter:drop-shadow(-1px_-1px_0_#ec4899)]" },
+  { key: "instagram", icon: Instagram, iconClass: "text-[#e879f9]" },
 ] as const;
 
-export function SupportLinks({ support, className = "" }: { support: SupportSettings; className?: string }) {
+type SupportChannel = (typeof CHANNELS)[number]["key"];
+
+export function SupportLinks({ support, className = "", channels }: { support: SupportSettings; className?: string; channels?: readonly SupportChannel[] }) {
   const items = CHANNELS.filter(
-    ({ key }) => support[`${key}_enabled`] && (support[`${key}_url`] ?? "").trim(),
+    ({ key }) => (!channels || channels.includes(key)) && support[`${key}_enabled`] && (support[`${key}_url`] ?? "").trim(),
   );
   if (!items.length) return null;
   return (
@@ -24,7 +26,7 @@ export function SupportLinks({ support, className = "" }: { support: SupportSett
           rel="noopener noreferrer"
           className="glass glow-hover inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors hover:text-primary-glow"
         >
-          <Icon size={13} className="text-primary-glow" />
+          <Icon size={15} className={items.find((item) => item.key === key)?.iconClass ?? "text-primary-glow"} />
           {support[`${key}_label`] || key}
         </a>
       ))}

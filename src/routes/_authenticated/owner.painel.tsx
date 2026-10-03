@@ -29,7 +29,7 @@ export const Route = createFileRoute("/_authenticated/owner/painel")({
 type Config = Awaited<ReturnType<typeof getAdminConfig>>;
 type Row = Record<string, unknown>;
 
-const TABS = ["Hero", "Acesso e vídeo", "Bot", "Regras", "Planos", "FAQ", "Seções", "Auditoria", "Suporte"] as const;
+const TABS = ["Hero", "Acesso e vídeo", "Bot", "Regras", "Planos", "FAQ", "Seções", "Chat", "Auditoria", "Suporte"] as const;
 
 function Field({
   label,
@@ -585,6 +585,22 @@ function PainelPage() {
               ))}
             </div>
             <p className="text-xs text-muted-foreground">Canais com URL vazia não aparecem no site, mesmo ativos.</p>
+          </div>
+        </Panel>
+      )}
+
+      {tab === "Chat" && (
+        <Panel title="Configurações do chat" actions={<SaveBtn onClick={() => void persist("chat")} />}>
+          <div className="space-y-4">
+            <label className="flex items-start gap-3 rounded-xl border border-border/60 bg-card/40 p-4">
+              <input type="checkbox" checked={s.chat.enabled} onChange={(e) => patch("chat", { ...s.chat, enabled: e.target.checked })} className="mt-1" />
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold">{s.chat.enabled ? "Chat aberto para todos" : "Chat fechado para todos"}</span>
+                <span className="mt-1 block text-xs text-muted-foreground">{s.chat.enabled ? "Visitantes podem iniciar conversas e enviar mensagens e prints." : "Visitantes não podem iniciar conversas nem enviar mensagens ou prints. Conversas existentes são preservadas."}</span>
+              </span>
+            </label>
+            <Field label="Mensagem exibida quando o chat estiver fechado" value={s.chat.closed_message} onChange={(v) => patch("chat", { ...s.chat, closed_message: v })} textarea />
+            <p className="text-xs text-muted-foreground">Salve para aplicar a configuração globalmente. Os botões de TikTok e WhatsApp usam os links cadastrados na aba Suporte.</p>
           </div>
         </Panel>
       )}
