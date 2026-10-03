@@ -76,20 +76,17 @@ function AcessoGratisPage() {
     let alive = true;
     const sessionId = getSessionId();
     if (!sessionId || !settings) return;
-    if (!settings.chat.enabled) {
-      setMessages([]);
-      setBooting(false);
-      return;
+    if (settings.chat.enabled) {
+      void track({ data: { sessionId, eventType: "free_access" } }).catch(() => {});
+      void track({ data: { sessionId, eventType: "chat_started" } }).catch(() => {});
     }
 
     setBooting(true);
-    void track({ data: { sessionId, eventType: "free_access" } }).catch(() => {});
-    void track({ data: { sessionId, eventType: "chat_started" } }).catch(() => {});
-
     start({ data: { sessionId, greeting: greetingKey() } })
       .then((res) => {
         if (!alive) return;
         setMessages(res.messages);
+        setSettings((current) => current ? { ...current, chat: { ...current.chat, enabled: !res.closed } } : current);
       })
       .catch(() => {
         if (alive) setError("Não foi possível iniciar o atendimento. Recarregue a página.");
@@ -102,12 +99,8 @@ function AcessoGratisPage() {
       poll({ data: { sessionId } })
         .then((res) => {
           if (!alive) return;
-          if (res.closed) {
-            setMessages([]);
-            setSettings((current) => current ? { ...current, chat: { ...current.chat, enabled: false } } : current);
-          } else if (res.messages.length) {
-            setMessages(res.messages);
-          }
+          setMessages(res.messages);
+          setSettings((current) => current ? { ...current, chat: { ...current.chat, enabled: !res.closed } } : current);
         })
         .catch(() => {});
     }, 8000);
@@ -191,6 +184,16 @@ function AcessoGratisPage() {
         className="glass mt-6 flex h-[68vh] min-h-[420px] flex-col overflow-hidden rounded-3xl"
         style={{ boxShadow: "var(--shadow-elegant)" }}
       >
+        {!settings?.chat.enabled && (
+          <div className="border-b border-border/60 bg-secondary/30 px-4 py-4 text-center sm:px-6">
+            <div className="mx-auto flex max-w-2xl items-center justify-center gap-2 font-display text-sm font-bold">
+              <MessageCircle size={17} className="text-muted-foreground" />
+              Chat fechado
+            </div>
+            <p className="mx-auto mt-1.5 max-w-2xl whitespace-pre-line text-xs leading-relaxed text-muted-foreground">{settings?.chat.closed_message}</p>
+            <SupportLinks support={settings?.support ?? defaultSettings.support} channels={["whatsapp", "tiktok"]} floating className="mt-3" />
+          </div>
+        )}
         <div ref={listRef} className="flex-1 space-y-4 overflow-y-auto px-4 py-5 sm:px-6">
           {booting ? (
             <div className="flex h-full items-center justify-center">
@@ -222,11 +225,11 @@ function AcessoGratisPage() {
           )}
         </div>
 
-        {error && (
+        {error && settings?.chat.enabled && (
           <p className="border-t border-border/60 px-5 py-2 text-xs text-primary-glow">{error}</p>
         )}
 
-        <div className="flex items-end gap-2 border-t border-border/60 p-3 sm:p-4">
+        {settings?.chat.enabled && <div className="flex items-end gap-2 border-t border-border/60 p-3 sm:p-4">
           <input
             ref={fileRef}
             type="file"
@@ -269,18 +272,8 @@ function AcessoGratisPage() {
           >
             {sending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
           </button>
-        </div>
+        </div>}
       </section>
-      ) : (
-        <section className="glass mt-6 flex flex-col items-center rounded-3xl px-5 py-10 text-center sm:px-8" style={{ boxShadow: "var(--shadow-elegant)" }} aria-live="polite">
-          <span className="grid size-14 place-items-center rounded-2xl border border-border/60 bg-secondary/60">
-            <MessageCircle size={24} className="text-muted-foreground" />
-          </span>
-          <h2 className="mt-4 font-display text-lg font-bold">Atendimento temporariamente fechado</h2>
-          <p className="mt-2 max-w-xl whitespace-pre-line text-sm leading-relaxed text-muted-foreground">{settings.chat.closed_message}</p>
-          {settings.support.show_in_chat && <SupportLinks support={settings.support} channels={["tiktok", "whatsapp"]} className="mt-6" />}
-        </section>
-      )}
     </AccessShell>
   );
 }

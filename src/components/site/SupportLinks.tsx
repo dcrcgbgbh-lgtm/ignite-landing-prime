@@ -10,23 +10,25 @@ const CHANNELS = [
 
 type SupportChannel = (typeof CHANNELS)[number]["key"];
 
-export function SupportLinks({ support, className = "", channels }: { support: SupportSettings; className?: string; channels?: readonly SupportChannel[] }) {
+export function SupportLinks({ support, className = "", channels, floating = false }: { support: SupportSettings; className?: string; channels?: readonly SupportChannel[]; floating?: boolean }) {
   const items = CHANNELS.filter(
     ({ key }) => (!channels || channels.includes(key)) && support[`${key}_enabled`] && (support[`${key}_url`] ?? "").trim(),
   );
   if (!items.length) return null;
   return (
     <div className={`flex flex-wrap items-center justify-center gap-2 ${className}`}>
-      <span className="text-xs text-muted-foreground">Suporte:</span>
-      {items.map(({ key, icon: Icon }) => (
+      {!floating && <span className="text-xs text-muted-foreground">Suporte:</span>}
+      {items.map(({ key, icon: Icon, iconClass }) => (
         <a
           key={key}
           href={support[`${key}_url`].trim()}
           target="_blank"
           rel="noopener noreferrer"
-          className="glass glow-hover inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors hover:text-primary-glow"
+          className={floating
+            ? "glass glow-hover inline-flex min-h-11 items-center gap-2 rounded-full border border-border/70 px-4 py-2 text-sm font-semibold shadow-lg transition-transform hover:-translate-y-0.5 hover:text-primary-glow"
+            : "glass glow-hover inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors hover:text-primary-glow"}
         >
-          <Icon size={15} className={items.find((item) => item.key === key)?.iconClass ?? "text-primary-glow"} />
+          <Icon size={floating ? 18 : 15} className={iconClass} />
           {support[`${key}_label`] || key}
         </a>
       ))}

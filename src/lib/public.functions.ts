@@ -163,15 +163,20 @@ export const startChat = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const db = await admin();
     const settings = await loadSettings(db);
-    if (!settings.chat.enabled) {
-      return { conversationId: null, messages: [] as ChatMessage[], settings, closed: true };
-    }
-
     let { data: conversation } = await db
       .from("conversations")
       .select("*")
       .eq("session_id", data.sessionId)
       .maybeSingle();
+
+    if (!settings.chat.enabled) {
+      return {
+        conversationId: conversation?.id ?? null,
+        messages: conversation ? await listMessages(db, conversation.id) : [],
+        settings,
+        closed: true,
+      };
+    }
 
     if (!conversation) {
       const inserted = await db
@@ -365,14 +370,13 @@ export const pollChat = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const db = await admin();
     const settings = await loadSettings(db);
-    if (!settings.chat.enabled) return { messages: [] as ChatMessage[], closed: true };
     const { data: conversation } = await db
       .from("conversations")
       .select("id")
       .eq("session_id", data.sessionId)
       .maybeSingle();
-    if (!conversation) return { messages: [] as ChatMessage[], closed: false };
-    return { messages: await listMessages(db, conversation.id), closed: false };
+    if (!conversation) return { messages: [] as ChatMessage[], closed: !settings.chat.enabled };
+    return { messages: await listMessages(db, conversation.id), closed: !settings.chat.enabled };
   });
 
 export const markWentToPaid = createServerFn({ method: "POST" })

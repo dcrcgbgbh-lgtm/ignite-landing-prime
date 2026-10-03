@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { OwnerShell, Panel } from "@/components/owner/OwnerShell";
 import {
@@ -9,7 +9,7 @@ import {
   deleteMessage,
 } from "@/lib/owner.functions";
 import { STAGE_LABELS } from "@/lib/site-config";
-import { Loader2, Search, Send, Trash2 } from "lucide-react";
+import { Bell, Loader2, Search, Send, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/owner/mensagens")({
   head: () => ({
@@ -49,6 +49,10 @@ function MessagesPage() {
   const [reply, setReply] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const previousUnread = useRef<number | null>(null);
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | "unsupported">(
+    typeof Notification === "undefined" ? "unsupported" : Notification.permission,
+  );
 
   const load = useCallback(async () => {
     try {
@@ -60,7 +64,36 @@ function MessagesPage() {
 
   useEffect(() => {
     void load();
+    const timer = window.setInterval(() => {
+      void load();
+    }, 10000);
+    return () => window.clearInterval(timer);
   }, [load]);
+
+  useEffect(() => {
+    if (!list) return;
+    const unread = list.totalUnread;
+    if (previousUnread.current !== null && unread > previousUnread.current && notificationPermission === "granted") {
+      const notification = new Notification("Nova mensagem no Premium Download Hub", {
+        body: `Você tem ${unread} mensagem(ns) não lida(s) na central de mensagens.`,
+        tag: "premium-download-hub-chat",
+      });
+      notification.onclick = () => {
+        window.focus();
+        notification.close();
+      };
+    }
+    previousUnread.current = unread;
+  }, [list, notificationPermission]);
+
+  const enableNotifications = async () => {
+    if (typeof Notification === "undefined") {
+      setNotificationPermission("unsupported");
+      return;
+    }
+    const permission = await Notification.requestPermission();
+    setNotificationPermission(permission);
+  };
 
   const openConv = useCallback(async (id: string) => {
     setOpenId(id);
@@ -122,6 +155,15 @@ function MessagesPage() {
       )}
 
       <div className="mb-5 flex flex-wrap items-center gap-2">
+        <button
+          onClick={() => void enableNotifications()}
+          disabled={notificationPermission === "unsupported" || notificationPermission === "granted"}
+          className="inline-flex items-center gap-1.5 rounded-xl border border-border/60 px-3 py-2 text-xs text-muted-foreground disabled:opacity-60"
+          title={notificationPermission === "granted" ? "Notificações ativadas" : "Ativar notificações do navegador"}
+        >
+          <Bell size={13} />
+          {notificationPermission === "granted" ? "Notificações ativadas" : notificationPermission === "denied" ? "Notificações bloqueadas no navegador" : notificationPermission === "unsupported" ? "Notificações indisponíveis" : "Ativar notificações"}
+        </button>
         {FILTERS.map(([value, label]) => (
           <button
             key={value}
