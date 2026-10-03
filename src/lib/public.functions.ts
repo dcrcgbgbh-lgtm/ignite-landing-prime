@@ -259,7 +259,6 @@ export const sendChatMessage = createServerFn({ method: "POST" })
       .insert({ conversation_id: conversation.id, sender: "user", content: data.content });
     if (insert.error) throw new Error(insert.error.message);
 
-    const settings = await loadSettings(db);
     const { data: rules } = await db
       .from("bot_rules")
       .select("keywords, response, ask_for_print, delay_ms")
