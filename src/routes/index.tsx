@@ -246,15 +246,20 @@ function Index() {
 
   useEffect(() => {
     let alive = true;
-    loadConfig()
-      .then((res: { settings: SiteSettings }) => {
-        if (alive) setSettings(res.settings);
-      })
-      .catch(() => {
-        if (alive) setSettings(defaultSettings);
-      });
+    const refresh = () => {
+      loadConfig()
+        .then((res: { settings: SiteSettings }) => {
+          if (alive) setSettings(res.settings);
+        })
+        .catch(() => {
+          if (alive) setSettings((current) => current ?? defaultSettings);
+        });
+    };
+    refresh();
+    const timer = window.setInterval(refresh, 15000);
     return () => {
       alive = false;
+      window.clearInterval(timer);
     };
   }, [loadConfig]);
 

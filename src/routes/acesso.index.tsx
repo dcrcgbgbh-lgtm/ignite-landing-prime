@@ -37,20 +37,25 @@ function AcessoPage() {
 
   useEffect(() => {
     let alive = true;
-    loadConfig()
-      .then((res) => {
-        if (alive) setSettings(res.settings);
-      })
-      .catch(() => {
-        if (alive) {
-          setSettings(defaultSettings);
-          setError("Não foi possível carregar as configurações mais recentes.");
-        }
-      });
+    const refresh = () => {
+      loadConfig()
+        .then((res) => {
+          if (alive) setSettings(res.settings);
+        })
+        .catch(() => {
+          if (alive) {
+            setSettings((current) => current ?? defaultSettings);
+            setError("Não foi possível carregar as configurações mais recentes.");
+          }
+        });
+    };
+    refresh();
+    const timer = window.setInterval(refresh, 15000);
     const sessionId = getSessionId();
     if (sessionId) void track({ data: { sessionId, eventType: "access_flow" } }).catch(() => {});
     return () => {
       alive = false;
+      window.clearInterval(timer);
     };
   }, [loadConfig, track]);
 

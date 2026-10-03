@@ -169,15 +169,6 @@ export const startChat = createServerFn({ method: "POST" })
       .eq("session_id", data.sessionId)
       .maybeSingle();
 
-    if (!settings.chat.enabled) {
-      return {
-        conversationId: conversation?.id ?? null,
-        messages: conversation ? await listMessages(db, conversation.id) : [],
-        settings,
-        closed: true,
-      };
-    }
-
     if (!conversation) {
       const inserted = await db
         .from("conversations")
@@ -237,6 +228,7 @@ export const startChat = createServerFn({ method: "POST" })
       conversationId: conversation!.id,
       messages: await listMessages(db, conversation!.id),
       settings,
+      closed: !settings.chat.enabled,
     };
   });
 

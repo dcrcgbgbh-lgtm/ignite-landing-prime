@@ -10,18 +10,34 @@ const CHANNELS = [
 
 type SupportChannel = (typeof CHANNELS)[number]["key"];
 
+function getExternalUrl(value: string | null | undefined): string | null {
+  const raw = (value ?? "").trim();
+  if (!raw) return null;
+  const candidate = /^https?:\/\//i.test(raw) ? raw : `https://${raw.replace(/^\/+/, "")}`;
+  try {
+    const url = new URL(candidate);
+    return url.protocol === "https:" || url.protocol === "http:" ? url.href : null;
+  } catch {
+    return null;
+  }
+}
+
 export function SupportLinks({ support, className = "", channels, floating = false }: { support: SupportSettings; className?: string; channels?: readonly SupportChannel[]; floating?: boolean }) {
-  const items = CHANNELS.filter(
-    ({ key }) => (!channels || channels.includes(key)) && support[`${key}_enabled`] && (support[`${key}_url`] ?? "").trim(),
-  );
+  const items = CHANNELS.flatMap((channel) => {
+    const { key } = channel;
+    const url = getExternalUrl(support[`${key}_url`]);
+    return (!channels || channels.includes(key)) && support[`${key}_enabled`] && url
+      ? [{ ...channel, url }]
+      : [];
+  });
   if (!items.length) return null;
   return (
     <div className={`flex flex-wrap items-center justify-center gap-2 ${className}`}>
       {!floating && <span className="text-xs text-muted-foreground">Suporte:</span>}
-      {items.map(({ key, icon: Icon, iconClass }) => (
+      {items.map(({ key, icon: Icon, iconClass, url }) => (
         <a
           key={key}
-          href={support[`${key}_url`].trim()}
+          href={url}
           target="_blank"
           rel="noopener noreferrer"
           className={floating
