@@ -179,7 +179,6 @@ function AcessoGratisPage() {
           <SupportLinks support={settings.support} className="mt-5" />
         )}
 
-      {!settings || settings.chat.enabled ? (
       <section
         className="glass mt-6 flex h-[68vh] min-h-[420px] flex-col overflow-hidden rounded-3xl"
         style={{ boxShadow: "var(--shadow-elegant)" }}
