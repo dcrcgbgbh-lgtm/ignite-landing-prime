@@ -315,8 +315,8 @@ function MessagesPage() {
                     <div className="mb-2 flex items-start gap-2">
                       <input
                         type="checkbox"
-                        checked={selectedMessages.includes(m.id)}
-                        onChange={(e) => setSelectedMessages((current) => e.target.checked ? [...current, m.id] : current.filter((id) => id !== m.id))}
+                        checked={selectedMessages.includes(m.id)} disabled={m.id.startsWith("local-")}
+                        onChange={(e) => { if (m.id.startsWith("local-")) return; setSelectedMessages((current) => e.target.checked ? [...current, m.id] : current.filter((id) => id !== m.id)); }}
                         className="mt-1 accent-primary"
                         aria-label="Selecionar mensagem"
                       />
