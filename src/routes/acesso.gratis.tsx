@@ -190,7 +190,7 @@ function AcessoGratisPage() {
               Chat fechado
             </div>
             <p className="mx-auto mt-1.5 max-w-2xl whitespace-pre-line text-xs leading-relaxed text-muted-foreground">{settings?.chat.closed_message}</p>
-            <SupportLinks support={settings?.support ?? defaultSettings.support} channels={["whatsapp", "tiktok"]} floating className="mt-3" />
+            <SupportLinks support={settings?.support ?? defaultSettings.support} floating className="mt-3" />
           </div>
         )}
         <div ref={listRef} className="flex-1 space-y-4 overflow-y-auto px-4 py-5 sm:px-6">
