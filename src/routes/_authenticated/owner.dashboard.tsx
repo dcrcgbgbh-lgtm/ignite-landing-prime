@@ -73,7 +73,7 @@ function StripeSection() {
     } finally {
       if (alive.current) setLoading(false);
     }
-  }, [period]);
+  }, []);
 
   useEffect(() => {
     alive.current = true;
@@ -244,7 +244,7 @@ function DashboardPage() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [period]);
 
 
   return (
