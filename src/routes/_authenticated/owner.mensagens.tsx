@@ -49,6 +49,7 @@ function MessagesPage() {
   const [reply, setReply] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedMessages, setSelectedMessages] = useState<string[]>([]);
   const previousUnread = useRef<number | null>(null);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | "unsupported">(
     typeof Notification === "undefined" ? "unsupported" : Notification.permission,
@@ -131,8 +132,17 @@ function MessagesPage() {
     if (!openId || !reply.trim()) return;
     setBusy(true);
     try {
-      await ownerReply({ data: { id: openId, content: reply } });
+      const optimistic = {
+        id: `local-${Date.now()}`,
+        sender: "owner" as const,
+        content: reply.trim(),
+        image_url: null,
+        created_at: new Date().toISOString(),
+      };
+      setConv((current) => current ? { ...current, messages: [...current.messages, optimistic] } : current);
+      const sent = reply;
       setReply("");
+      await ownerReply({ data: { id: openId, content: sent } });
       await openConv(openId);
       await load();
     } catch (e) {
@@ -145,7 +155,22 @@ function MessagesPage() {
   const removeMessage = async (messageId: string) => {
     if (!window.confirm("Excluir esta mensagem?")) return;
     await deleteMessage({ data: { messageId } });
+    setSelectedMessages((s) => s.filter((id) => id !== messageId));
     if (openId) await openConv(openId);
+  };
+
+  const removeSelectedMessages = async () => {
+    if (!selectedMessages.length || !window.confirm(`Excluir ${selectedMessages.length} mensagem(ns) selecionada(s)?`)) return;
+    setBusy(true);
+    try {
+      await Promise.all(selectedMessages.map((messageId) => deleteMessage({ data: { messageId } })));
+      setSelectedMessages([]);
+      if (openId) await openConv(openId);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Falha ao excluir mensagens.");
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -243,7 +268,12 @@ function MessagesPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                {selectedMessages.length > 0 && (
+                  <button onClick={() => void removeSelectedMessages()} disabled={busy} className="owner-chip text-destructive">
+                    Excluir selecionadas ({selectedMessages.length})
+                  </button>
+                )}
                 <button onClick={() => void act(openId, "read")} disabled={busy} className="owner-chip">
                   Marcar lida
                 </button>
@@ -282,7 +312,16 @@ function MessagesPage() {
                           : "bg-card/50"
                     }`}
                   >
-                    <p className="whitespace-pre-wrap break-words">{m.content}</p>
+                    <div className="mb-2 flex items-start gap-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedMessages.includes(m.id)}
+                        onChange={(e) => setSelectedMessages((current) => e.target.checked ? [...current, m.id] : current.filter((id) => id !== m.id))}
+                        className="mt-1 accent-primary"
+                        aria-label="Selecionar mensagem"
+                      />
+                      <p className="whitespace-pre-wrap break-words">{m.content}</p>
+                    </div>
                     {m.image_url && (
                       <a href={m.image_url} target="_blank" rel="noreferrer">
                         <img

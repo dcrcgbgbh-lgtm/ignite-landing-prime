@@ -95,16 +95,24 @@ export const getOwnerStatus = createServerFn({ method: "POST" })
 
 export const getDashboard = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator((input: { period?: "today" | "month" | "all" } = {}) => input)
+  .handler(async ({ context, data }) => {
     const { db } = await requireOwner(context);
 
-    const countEvent = async (t: string) =>
-      (
-        await db
-          .from("visitor_events")
-          .select("id", { count: "exact", head: true })
-          .eq("event_type", t)
-      ).count ?? 0;
+    const period = data.period ?? "all";
+    const now = new Date();
+    const start = period === "today"
+      ? new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      : period === "month"
+        ? new Date(now.getFullYear(), now.getMonth(), 1)
+        : null;
+    const since = start?.toISOString();
+
+    const countEvent = async (t: string) => {
+      let q = db.from("visitor_events").select("id", { count: "exact", head: true }).eq("event_type", t);
+      if (since) q = q.gte("created_at", since);
+      return (await q).count ?? 0;
+    };
 
     const [
       site_visit,
@@ -125,18 +133,27 @@ export const getDashboard = createServerFn({ method: "POST" })
     ]);
 
     const [totalEvents, conversations, messages, prints, confirmed, clicks] = await Promise.all([
-      db.from("visitor_events").select("id", { count: "exact", head: true }),
+      (() => {
+        let q = db.from("visitor_events").select("id", { count: "exact", head: true });
+        return since ? q.gte("created_at", since) : q;
+      })(),
       db.from("conversations").select("id, unread_count", { count: "exact" }),
-      db.from("messages").select("id", { count: "exact", head: true }).eq("sender", "user"),
-      db.from("messages").select("id", { count: "exact", head: true }).not("image_url", "is", null),
-      db
-        .from("purchase_events")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "confirmed"),
-      db
-        .from("purchase_events")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "checkout_started"),
+      (() => {
+        let q = db.from("messages").select("id", { count: "exact", head: true }).eq("sender", "user");
+        return since ? q.gte("created_at", since) : q;
+      })(),
+      (() => {
+        let q = db.from("messages").select("id", { count: "exact", head: true }).not("image_url", "is", null);
+        return since ? q.gte("created_at", since) : q;
+      })(),
+      (() => {
+        let q = db.from("purchase_events").select("id", { count: "exact", head: true }).eq("status", "confirmed");
+        return since ? q.gte("created_at", since) : q;
+      })(),
+      (() => {
+        let q = db.from("purchase_events").select("id", { count: "exact", head: true }).eq("status", "checkout_started");
+        return since ? q.gte("created_at", since) : q;
+      })(),
     ]);
 
     const unread = (conversations.data ?? []).reduce((a, c) => a + (c.unread_count ?? 0), 0);

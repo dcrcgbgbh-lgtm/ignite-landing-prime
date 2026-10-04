@@ -7,7 +7,7 @@ import {
   createStripeTestCharge,
   createStripePayout,
 } from "@/lib/owner.functions";
-import { Eye, EyeOff, Loader2, Copy, Check, RefreshCw } from "lucide-react";
+import { Eye, EyeOff, Loader2, Copy, Check, RefreshCw, CalendarDays, WalletCards, TrendingUp, Clock3, Sparkles } from "lucide-react";
 
 
 
@@ -73,7 +73,7 @@ function StripeSection() {
     } finally {
       if (alive.current) setLoading(false);
     }
-  }, []);
+  }, [period]);
 
   useEffect(() => {
     alive.current = true;
@@ -231,13 +231,14 @@ function StripeSection() {
 
 function DashboardPage() {
   const [data, setData] = useState<Data | null>(null);
+  const [period, setPeriod] = useState<"today" | "month" | "all">("month");
   const [error, setError] = useState<string | null>(null);
   const [revealed, setRevealed] = useState<Record<string, boolean>>({});
   const [copied, setCopied] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
-    getDashboard()
+    getDashboard({ data: { period } })
       .then((d) => alive && setData(d))
       .catch((e) => alive && setError(e instanceof Error ? e.message : "Falha ao carregar."));
     return () => {
@@ -248,6 +249,26 @@ function DashboardPage() {
 
   return (
     <OwnerShell title="Dashboard">
+      <div className="mb-7 overflow-hidden rounded-3xl border border-border/60 bg-card/50 p-5 shadow-[var(--shadow-elegant)] sm:p-7">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] font-semibold text-primary-glow">
+              <Sparkles size={13} /> Painel financeiro
+            </div>
+            <h1 className="font-display text-2xl font-black tracking-tight sm:text-3xl">
+              {new Date().getHours() < 12 ? "Bom dia" : new Date().getHours() < 18 ? "Boa tarde" : "Boa noite"} 👋
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">Visão geral do Premium Download Hub em tempo real.</p>
+          </div>
+          <div className="flex rounded-2xl border border-border/60 bg-background/50 p-1">
+            {([["today","Hoje",CalendarDays],["month","Este mês",TrendingUp],["all","Tudo",WalletCards]] as const).map(([value,label,Icon]) => (
+              <button key={value} onClick={() => setPeriod(value)} className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition-all duration-300 ${period === value ? "bg-primary/15 text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+                <Icon size={14} /> {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
       {error && (
         <p className="mb-5 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm">{error}</p>
       )}
@@ -260,6 +281,31 @@ function DashboardPage() {
       <div className="mb-6">
         <StripeSection />
       </div>
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          ["Saldo disponível", "Consulte o gateway conectado", WalletCards],
+          ["Saldo pendente", "Aguardando liquidação", Clock3],
+          ["Melhor dia", "Maior faturamento registrado", TrendingUp],
+          ["Status", "Pronto para integrar SigiloPay", Sparkles],
+        ].map(([title,sub,Icon], i) => (
+          <div key={String(title)} className="group rounded-2xl border border-border/60 bg-card/40 p-4 transition-all duration-500 hover:-translate-y-1 hover:border-primary/30 hover:shadow-[var(--shadow-glow)]" style={{ animation: `scale-in .35s ease-out ${i * 70}ms both` }}>
+            <Icon size={18} className="text-primary-glow" />
+            <p className="mt-4 text-sm font-bold">{title}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{sub}</p>
+          </div>
+        ))}
+      </div>
+      <Panel title="SigiloPay">
+        <div className="flex flex-col gap-3 rounded-2xl border border-border/60 bg-card/40 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="font-semibold">Gateway de cobrança PIX</p>
+            <p className="mt-1 text-xs text-muted-foreground">Estrutura preparada para conectar a API SigiloPay sem expor chave secreta no navegador.</p>
+          </div>
+          <a href="https://www.sigilopay.com/" target="_blank" rel="noreferrer" className="inline-flex items-center justify-center rounded-xl border border-border/60 px-4 py-2 text-xs font-semibold transition hover:border-primary/50 hover:text-primary-glow">
+            Abrir SigiloPay
+          </a>
+        </div>
+      </Panel>
 
 
 
