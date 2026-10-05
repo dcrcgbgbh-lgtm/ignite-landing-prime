@@ -368,16 +368,27 @@ export const getCouponUsage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { db } = await requireOwner(context);
-    const { data } = await db
-      .from("visitor_events")
-      .select("metadata")
-      .eq("event_type", "coupon_redeemed")
-      .limit(5000);
+    const { data: settingRow } = await db
+      .from("site_settings")
+      .select("value")
+      .eq("key", "coupons")
+      .maybeSingle();
+    const coupons = Array.isArray(settingRow?.value) ? settingRow.value as Record<string, unknown>[] : [];
     const usage: Record<string, number> = {};
-    for (const row of data ?? []) {
-      const metadata = (row.metadata ?? {}) as Record<string, unknown>;
-      const couponId = String(metadata.coupon_id ?? "");
-      if (couponId) usage[couponId] = (usage[couponId] ?? 0) + 1;
+    for (const coupon of coupons) {
+      const couponId = String(coupon.id ?? "");
+      if (!couponId) continue;
+      let query = db
+        .from("visitor_events")
+        .select("id", { count: "exact", head: true })
+        .eq("event_type", "coupon_redeemed")
+        .contains("metadata", { coupon_id: couponId });
+      const resetAt = typeof coupon.usage_reset_at === "string" && coupon.usage_reset_at
+        ? coupon.usage_reset_at
+        : "1970-01-01T00:00:00.000Z";
+      query = query.gte("created_at", resetAt);
+      const { count } = await query;
+      usage[couponId] = count ?? 0;
     }
     return { usage };
   });
