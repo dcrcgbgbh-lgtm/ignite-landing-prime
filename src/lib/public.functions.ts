@@ -193,7 +193,9 @@ export const startChat = createServerFn({ method: "POST" })
         { key: "welcome", content: bm.welcome },
         { key: "steps", content: buildStepsMessage(settings) },
         { key: "print_hint", content: settings.free_access.print_hint },
-        { key: "profile", content: settings.bot_messages.profile },
+        ...(settings.bot_messages.profile.trim()
+          ? [{ key: "profile", content: settings.bot_messages.profile }]
+          : []),
       ];
 
       const { data: existing } = await db
