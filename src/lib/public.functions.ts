@@ -194,8 +194,6 @@ async function syncAutomaticMessages(
         .eq("conversation_id", conversationId)
         .eq("sender", "bot")
         .ilike("content", item.pattern);
-      await db
-        .from("messages")
       continue;
     }
 
