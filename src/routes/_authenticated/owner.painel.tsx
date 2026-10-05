@@ -1,3 +1,4 @@
+import type { CouponConfig } from "@/lib/site-config";
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { OwnerShell, Panel } from "@/components/owner/OwnerShell";
