@@ -225,16 +225,23 @@ export const recordCouponApplied = createServerFn({ method: "POST" })
       throw new Error("Este cupom já atingiu o limite de usos.");
     }
 
-    const { error } = await db.from("visitor_events").insert({
-      session_id: data.sessionId,
-      event_type: "coupon_applied",
-      metadata: {
-        coupon_id: coupon.id,
-        code: coupon.code,
-        plan_id: coupon.plan_id,
-        discount_percent: Number(coupon.discount_percent),
+    // Um visitante só pode ter um evento "coupon_applied" por sessão.
+    // Ao trocar de plano, atualizamos o evento existente em vez de gerar
+    // "duplicate key". A validação acima continua bloqueando reaplicação
+    // do mesmo cupom na mesma compra.
+    const { error } = await db.from("visitor_events").upsert(
+      {
+        session_id: data.sessionId,
+        event_type: "coupon_applied",
+        metadata: {
+          coupon_id: coupon.id,
+          code: coupon.code,
+          plan_id: coupon.plan_id,
+          discount_percent: Number(coupon.discount_percent),
+        },
       },
-    });
+      { onConflict: "session_id,event_type" },
+    );
     if (error) throw new Error(error.message);
     return { ok: true, coupon: { ...coupon, used_count: count ?? 0, remaining: maxUses > 0 ? Math.max(0, maxUses - (count ?? 0)) : null } };
   });
