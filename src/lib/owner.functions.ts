@@ -486,7 +486,7 @@ export const confirmPurchase = createServerFn({ method: "POST" })
 
     const { data: purchase } = await db
       .from("purchase_events")
-      .select("id, session_id, plan_id, status")
+      .select("id, session_id, plan_id, status, created_at")
       .eq("id", data.id)
       .maybeSingle();
 
@@ -500,6 +500,7 @@ export const confirmPurchase = createServerFn({ method: "POST" })
         .select("metadata, created_at")
         .eq("session_id", purchase.session_id)
         .eq("event_type", "coupon_applied")
+        .gte("created_at", purchase.created_at)
         .order("created_at", { ascending: false })
         .limit(20);
 
