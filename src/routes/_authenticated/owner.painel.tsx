@@ -290,30 +290,31 @@ function PainelPage() {
       )}
 
       {tab === "Bot" && (
-        <Panel title="Mensagens do bot" actions={<SaveBtn onClick={() => void persist("bot_messages")} />}>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {(Object.keys(s.bot_messages) as (keyof typeof s.bot_messages)[])
-              .filter((k) => k !== "steps")
-              .map((k) => (
-                <Field
-                  key={k}
-                  label={
-                    k === "profile"
-                      ? "Mensagem final automática"
-                      : k === "greeting_morning"
-                        ? "Bom dia"
-                        : k === "greeting_afternoon"
-                          ? "Boa tarde"
-                          : k === "greeting_evening"
-                            ? "Boa noite"
-                            : k
+        <div className="space-y-5">
+          <Panel
+            title="Mensagem do TikTok Lite"
+            actions={<SaveBtn onClick={() => void persist("bot_messages")} />}
+          >
+            <div className="space-y-4">
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={s.bot_messages.steps_enabled}
+                  onChange={(e) =>
+                    patch("bot_messages", { ...s.bot_messages, steps_enabled: e.target.checked })
                   }
-                  value={String(s.bot_messages[k] ?? "")}
-                  onChange={(v) => patch("bot_messages", { ...s.bot_messages, [k]: v })}
-                  textarea
                 />
-              ))}
-            <div className="sm:col-span-2">
+                Ativar esta mensagem no bot
+              </label>
+              <p className="text-xs text-muted-foreground">
+                Controla a mensagem "🚀 Acesso rápido e simples", incluindo o link do TikTok e o passo a passo.
+                Desative aqui para ela deixar de aparecer no chat.
+              </p>
+              <Field
+                label="Título da mensagem"
+                value={s.bot_messages.steps_title}
+                onChange={(v) => patch("bot_messages", { ...s.bot_messages, steps_title: v })}
+              />
               <Field
                 label="Passos (um por linha)"
                 value={(s.bot_messages.steps ?? []).join("\n")}
@@ -323,8 +324,68 @@ function PainelPage() {
                 textarea
               />
             </div>
-          </div>
-        </Panel>
+          </Panel>
+
+          <Panel
+            title="Mensagem GHOST XITS"
+            actions={<SaveBtn onClick={() => void persist("bot_messages")} />}
+          >
+            <div className="space-y-4">
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={s.bot_messages.profile_enabled}
+                  onChange={(e) =>
+                    patch("bot_messages", { ...s.bot_messages, profile_enabled: e.target.checked })
+                  }
+                />
+                Ativar esta mensagem no bot
+              </label>
+              <p className="text-xs text-muted-foreground">
+                Controla a mensagem final automática com GHOST XITS. Desative aqui para removê-la do chat.
+              </p>
+              <Field
+                label="Texto da mensagem"
+                value={s.bot_messages.profile}
+                onChange={(v) => patch("bot_messages", { ...s.bot_messages, profile: v })}
+                textarea
+              />
+            </div>
+          </Panel>
+
+          <Panel title="Outras mensagens automáticas" actions={<SaveBtn onClick={() => void persist("bot_messages")} />}>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {(Object.keys(s.bot_messages) as (keyof typeof s.bot_messages)[])
+                .filter(
+                  (k) =>
+                    ![
+                      "steps",
+                      "steps_enabled",
+                      "profile_enabled",
+                      "profile",
+                      "steps_title",
+                    ].includes(k),
+                )
+                .map((k) => (
+                  <Field
+                    key={k}
+                    label={
+                      k === "greeting_morning"
+                        ? "Bom dia"
+                        : k === "greeting_afternoon"
+                          ? "Boa tarde"
+                          : k === "greeting_evening"
+                            ? "Boa noite"
+                            : k
+                    }
+                    value={String(s.bot_messages[k] ?? "")}
+                    onChange={(v) => patch("bot_messages", { ...s.bot_messages, [k]: v })}
+                    textarea
+                  />
+                ))}
+            </div>
+          </Panel>
+        </div>
       )}
 
       {tab === "Regras" && (
