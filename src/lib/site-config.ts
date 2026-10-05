@@ -55,6 +55,8 @@ export type CouponConfig = {
   discount_percent: number;
   display_text: string;
   enabled: boolean;
+  max_uses: number | null;
+  used_count?: number;
 };
 
 export type SectionsSettings = Record<string, boolean>;
@@ -169,6 +171,8 @@ export function mergeSettings(raw: Record<string, unknown> | undefined | null): 
       discount_percent: Number(c.discount_percent) || 0,
       display_text: String(c.display_text ?? ""),
       enabled: c.enabled === true,
+      max_uses: Number.isFinite(Number(c.max_uses)) && Number(c.max_uses) > 0 ? Math.floor(Number(c.max_uses)) : null,
+      used_count: Math.max(0, Math.floor(Number(c.used_count) || 0)),
     }));
   return out;
 }
