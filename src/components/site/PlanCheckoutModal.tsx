@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { Check, Copy, Loader2, QrCode, X } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { getPublicConfig, recordCouponApplied } from "@/lib/public.functions";
-import { getSessionId } from "@/lib/session";
 import type { CouponConfig, PlanConfig } from "@/lib/site-config";
 import {
   activeCouponsForPlan,
@@ -14,6 +13,22 @@ import {
 } from "@/lib/pix-coupon";
 
 type CheckoutPlan = Pick<PlanConfig, "id" | "name" | "price" | "pix_payload">;
+
+const CHECKOUT_SESSION_KEY = "ffe_session_id";
+
+function getCheckoutSessionId(): string {
+  if (typeof window === "undefined") return "";
+  try {
+    let id = window.localStorage.getItem(CHECKOUT_SESSION_KEY);
+    if (!id) {
+      id = `s_${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
+      window.localStorage.setItem(CHECKOUT_SESSION_KEY, id);
+    }
+    return id;
+  } catch {
+    return "anon";
+  }
+}
 
 export function PlanCheckoutModal({
   plan,
@@ -99,7 +114,7 @@ export function PlanCheckoutModal({
     try {
       await recordCouponApplied({
         data: {
-          sessionId: getSessionId(),
+          sessionId: getCheckoutSessionId(),
           planId: plan.id,
           couponId: result.coupon.id,
           code: result.coupon.code,
