@@ -132,7 +132,7 @@ export function CheckoutModal({ planId, onClose }: { planId: PlanId | null; onCl
       await navigator.clipboard.writeText(effectivePayload);
     } catch {
       const el = document.createElement("textarea");
-      el.value = plan.payload;
+      el.value = effectivePayload;
       el.setAttribute("readonly", "");
       el.style.position = "fixed";
       el.style.opacity = "0";
