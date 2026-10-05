@@ -42,6 +42,7 @@ export type BotMessages = {
   paid_pitch: string;
   fallback: string;
   error_generic: string;
+  profile: string;
 };
 export type FaqSettings = { items: { q: string; a: string }[] };
 export type SectionsSettings = Record<string, boolean>;
@@ -118,6 +119,8 @@ export const defaultSettings: SiteSettings = {
       "Quer continuar sem depender das etapas do acesso grátis? Veja como funciona o acesso pago, confira o vídeo e escolha a opção que fizer sentido pra você.",
     fallback: "Estou por aqui 👋 Se travou em alguma etapa, me conta o que apareceu na tela.",
     error_generic: "Não consegui enviar sua mensagem agora. Tente novamente em instantes.",
+    profile:
+      "🔥 GHOST XITS | OFICIAL\n\n⚡ XITS exclusivos & atualizados\n🎯 Qualidade e suporte rápido\n📩 Atendimento pelo Direct\n👇 Chame agora e confira",
   },
   faq: { items: [] },
   sections: { reviews: true, features: true, faq: true, exclusive: true },
