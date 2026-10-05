@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Check, Copy, Loader2, QrCode, X } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
-import { getPublicConfig } from "@/lib/public.functions";
+import { getPublicConfig, recordCouponApplied } from "@/lib/public.functions";
 import type { CouponConfig, PlanConfig } from "@/lib/site-config";
 import {
   activeCouponsForPlan,
@@ -51,7 +51,7 @@ export function PlanCheckoutModal({
         .catch(() => {});
     };
     refreshCoupons();
-    const couponTimer = couponsProp ? undefined : window.setInterval(refreshCoupons, 2000);
+    const couponTimer = window.setInterval(refreshCoupons, 2000);
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onCloseRef.current();
     };
@@ -82,7 +82,7 @@ export function PlanCheckoutModal({
     payload,
   )}`;
 
-  const applyCoupon = () => {
+  const applyCoupon = async () => {
     const result = validateCoupon(couponCode, plan.id, allCoupons);
     if (!result.ok) {
       setApplied(null);
@@ -93,6 +93,24 @@ export function PlanCheckoutModal({
     if (hasKey && !withPixAmount(basePayload, discountedCents(baseCents, pct))) {
       setApplied(null);
       setCouponMessage({ text: "Não foi possível aplicar o cupom a este código Pix.", ok: false });
+      return;
+    }
+    try {
+      await recordCouponApplied({
+        data: {
+          sessionId: getSessionId(),
+          planId: plan.id,
+          couponId: result.coupon.id,
+          code: result.coupon.code,
+          discountPercent: pct,
+        },
+      });
+    } catch (error) {
+      setApplied(null);
+      setCouponMessage({
+        text: error instanceof Error ? error.message : "Não foi possível aplicar este cupom.",
+        ok: false,
+      });
       return;
     }
     setApplied(result.coupon);
