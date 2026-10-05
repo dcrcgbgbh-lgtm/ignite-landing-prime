@@ -376,6 +376,19 @@ export const saveSetting = createServerFn({ method: "POST" })
       .from("site_settings")
       .upsert({ key: data.key, value: data.value as never, is_public: true }, { onConflict: "key" });
     if (error) throw new Error(error.message);
+
+    if (data.key === "bot_messages") {
+      const bot = data.value as Record<string, unknown>;
+      const disabledKeys = [
+        bot.steps_enabled === false ? "steps" : null,
+        bot.profile_enabled === false ? "profile" : null,
+      ].filter((key): key is string => Boolean(key));
+
+      if (disabledKeys.length) {
+        await db.from("messages").delete().in("auto_key", disabledKeys);
+      }
+    }
+
     await audit(db, userId, "update", `site_settings:${data.key}`, {});
     return { ok: true };
   });
