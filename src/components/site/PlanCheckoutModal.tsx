@@ -41,17 +41,25 @@ export function PlanCheckoutModal({
     setCouponCode("");
     setApplied(null);
     setCouponMessage(null);
-    if (!couponsProp) {
+    let alive = true;
+    const refreshCoupons = () => {
+      if (couponsProp) return;
       loadConfig()
-        .then((res) => setLoadedCoupons(Array.isArray(res.settings.coupons) ? res.settings.coupons : []))
-        .catch(() => setLoadedCoupons([]));
-    }
+        .then((res) => {
+          if (alive) setLoadedCoupons(Array.isArray(res.settings.coupons) ? res.settings.coupons : []);
+        })
+        .catch(() => {});
+    };
+    refreshCoupons();
+    const couponTimer = couponsProp ? undefined : window.setInterval(refreshCoupons, 2000);
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onCloseRef.current();
     };
     document.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
     return () => {
+      alive = false;
+      if (couponTimer) window.clearInterval(couponTimer);
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
     };

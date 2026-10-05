@@ -1,5 +1,5 @@
 import type { CouponConfig } from "@/lib/site-config";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { OwnerShell, Panel } from "@/components/owner/OwnerShell";
 import {
@@ -10,7 +10,7 @@ import {
   deleteBotRule,
 } from "@/lib/owner.functions";
 import type { SiteSettings } from "@/lib/site-config";
-import { Loader2 } from "lucide-react";
+import { CheckCircle2, Loader2, Percent, Sparkles, Tag, Zap } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/owner/painel")({
   head: () => ({
@@ -69,6 +69,9 @@ function PainelPage() {
   const [tab, setTab] = useState<(typeof TABS)[number]>("Hero");
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [couponSync, setCouponSync] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const couponHydrated = useRef(false);
+  const couponSaveTimer = useRef<number | null>(null);
 
   const load = async () => {
     try {
@@ -81,6 +84,33 @@ function PainelPage() {
   useEffect(() => {
     void load();
   }, []);
+
+  useEffect(() => {
+    if (!cfg) return;
+    if (!couponHydrated.current) {
+      couponHydrated.current = true;
+      return;
+    }
+    if (tab !== "Cupom") return;
+    if (couponSaveTimer.current) window.clearTimeout(couponSaveTimer.current);
+    setCouponSync("saving");
+    couponSaveTimer.current = window.setTimeout(async () => {
+      try {
+        await saveSetting({
+          data: {
+            key: "coupons",
+            value: cfg.settings.coupons as unknown as Record<string, unknown>,
+          },
+        });
+        setCouponSync("saved");
+      } catch {
+        setCouponSync("error");
+      }
+    }, 700);
+    return () => {
+      if (couponSaveTimer.current) window.clearTimeout(couponSaveTimer.current);
+    };
+  }, [cfg?.settings.coupons, tab]);
 
   if (!cfg) {
     return (
@@ -638,94 +668,132 @@ function PainelPage() {
 
       {tab === "Cupom" && (
         <div className="space-y-5">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="group rounded-2xl border border-border/60 bg-card/40 p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30">
+              <div className="flex items-center justify-between">
+                <span className="grid size-9 place-items-center rounded-xl bg-primary/10 text-primary-glow"><Tag size={17} /></span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Total</span>
+              </div>
+              <p className="mt-3 text-2xl font-black">{s.coupons.length}</p>
+              <p className="text-xs text-muted-foreground">cupons cadastrados</p>
+            </div>
+            <div className="group rounded-2xl border border-border/60 bg-card/40 p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30">
+              <div className="flex items-center justify-between">
+                <span className="grid size-9 place-items-center rounded-xl bg-emerald-500/10 text-emerald-400"><CheckCircle2 size={17} /></span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Ativos</span>
+              </div>
+              <p className="mt-3 text-2xl font-black">{s.coupons.filter((c) => c.enabled).length}</p>
+              <p className="text-xs text-muted-foreground">disponíveis no checkout</p>
+            </div>
+            <div className="group rounded-2xl border border-border/60 bg-card/40 p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/30">
+              <div className="flex items-center justify-between">
+                <span className="grid size-9 place-items-center rounded-xl bg-amber-500/10 text-amber-400"><Percent size={17} /></span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Desconto</span>
+              </div>
+              <p className="mt-3 text-2xl font-black">
+                {s.coupons.length ? Math.round(s.coupons.reduce((sum, c) => sum + Number(c.discount_percent || 0), 0) / s.coupons.length) : 0}%
+              </p>
+              <p className="text-xs text-muted-foreground">média dos descontos</p>
+            </div>
+          </div>
+
           <Panel
-            title="Cupons de desconto"
+            title="Central de cupons"
             actions={
-              <div className="flex gap-2">
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card/50 px-3 py-1.5 text-[11px] font-semibold text-muted-foreground">
+                  <span className={couponSync === "saving" ? "size-1.5 animate-pulse rounded-full bg-amber-400" : couponSync === "error" ? "size-1.5 rounded-full bg-red-400" : "size-1.5 rounded-full bg-emerald-400"} />
+                  {couponSync === "saving" ? "Sincronizando..." : couponSync === "error" ? "Erro ao sincronizar" : "Sincronizado em tempo real"}
+                </span>
                 <button
                   type="button"
                   onClick={addCoupon}
-                  className="rounded-xl border border-border/60 px-3 py-2 text-xs font-semibold hover:border-primary/50"
+                  className="inline-flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/5 px-3 py-2 text-xs font-bold text-primary-glow transition-all hover:-translate-y-0.5 hover:bg-primary/10"
                 >
-                  + Novo cupom
+                  <Sparkles size={14} /> Novo cupom
                 </button>
                 <SaveBtn onClick={() => void persist("coupons")} />
               </div>
             }
           >
-            <div className="mb-4 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-xs text-muted-foreground">
-              Crie códigos que o cliente digita na janela de compra. O percentual é aplicado automaticamente ao valor do plano e ao código Pix gerado.
+            <div className="mb-5 flex items-start gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4">
+              <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary-glow"><Zap size={17} /></span>
+              <div>
+                <p className="text-sm font-bold text-foreground">Cupons por plano + sincronização automática</p>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                  Cada cupom fica vinculado a um plano específico. As alterações são salvas automaticamente e chegam ao checkout público sem precisar recarregar a página.
+                </p>
+              </div>
             </div>
 
             {s.coupons.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border/60 p-6 text-center text-sm text-muted-foreground">
-                Nenhum cupom criado. Clique em <strong className="text-foreground">+ Novo cupom</strong>.
+              <div className="rounded-2xl border border-dashed border-border/60 p-10 text-center">
+                <span className="mx-auto grid size-12 place-items-center rounded-2xl bg-primary/10 text-primary-glow"><Tag size={20} /></span>
+                <p className="mt-3 font-bold">Nenhum cupom criado</p>
+                <p className="mt-1 text-xs text-muted-foreground">Crie seu primeiro cupom para liberar uma oferta no checkout.</p>
+                <button type="button" onClick={addCoupon} className="mt-4 rounded-xl px-4 py-2.5 text-xs font-bold text-primary-foreground" style={{ background: "var(--gradient-primary)" }}>
+                  Criar primeiro cupom
+                </button>
               </div>
             ) : (
               <div className="space-y-4">
                 {s.coupons.map((coupon, i) => (
-                  <div key={coupon.id} className="rounded-2xl border border-border/60 bg-card/40 p-4">
-                    <div className="mb-4 flex items-center justify-between gap-3">
-                      <div>
-                        <p className="font-semibold">{coupon.name || "Novo cupom"}</p>
-                        <p className="text-xs text-muted-foreground">
-                          Plano: {coupon.plan_id === "starter" ? "R$ 9,99" : coupon.plan_id === "premium" ? "R$ 14,90" : "R$ 29,90"} · Código: {coupon.code || "—"} · {coupon.discount_percent}% OFF
-                        </p>
+                  <div key={coupon.id} className="group rounded-2xl border border-border/60 bg-card/30 p-4 transition-all duration-300 hover:border-primary/30 hover:bg-card/50">
+                    <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary-glow"><Tag size={18} /></span>
+                        <div className="min-w-0">
+                          <p className="truncate font-bold">{coupon.name || "Novo cupom"}</p>
+                          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+                            <span className="rounded-full border border-border/60 bg-background/30 px-2 py-0.5">{coupon.code || "SEM CÓDIGO"}</span>
+                            <span>•</span>
+                            <span>{coupon.plan_id === "starter" ? "Elite Starter · R$ 9,99" : coupon.plan_id === "premium" ? "Elite Premium · R$ 14,90" : "Elite VIP · R$ 29,90"}</span>
+                            <span>•</span>
+                            <span className="font-bold text-primary-glow">{coupon.discount_percent}% OFF</span>
+                          </div>
+                        </div>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => patch("coupons", s.coupons.filter((_, index) => index !== i))}
-                        className="rounded-xl border border-destructive/40 px-3 py-2 text-xs text-destructive"
-                      >
-                        Excluir
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${coupon.enabled ? "bg-emerald-500/10 text-emerald-400" : "bg-muted text-muted-foreground"}`}>
+                          {coupon.enabled ? "Ativo" : "Desativado"}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => patch("coupons", s.coupons.filter((_, index) => index !== i))}
+                          className="rounded-xl border border-destructive/30 px-3 py-2 text-xs font-semibold text-destructive transition-colors hover:bg-destructive/10"
+                        >
+                          Excluir
+                        </button>
+                      </div>
                     </div>
 
-                    <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="grid gap-3 rounded-2xl border border-border/50 bg-background/20 p-3 sm:grid-cols-2">
                       <label className="block">
-                        <span className="mb-1 block text-xs text-muted-foreground">Plano do cupom</span>
+                        <span className="mb-1 block text-xs font-semibold text-muted-foreground">Plano do cupom</span>
                         <select
                           value={coupon.plan_id}
                           onChange={(e) => updateCoupon(i, "plan_id", e.target.value)}
-                          className="w-full rounded-xl border border-border/60 bg-card/50 px-3 py-2.5 text-sm outline-none focus:border-primary/60"
+                          className="w-full rounded-xl border border-border/60 bg-card/50 px-3 py-2.5 text-sm outline-none transition focus:border-primary/60"
                         >
                           <option value="starter">R$ 9,99 — Elite Starter</option>
                           <option value="premium">R$ 14,90 — Elite Premium</option>
                           <option value="vip">R$ 29,90 — Elite VIP</option>
                         </select>
                       </label>
-                      <Field
-                        label="Código do cupom"
-                        value={coupon.code}
-                        onChange={(v) => updateCoupon(i, "code", v.toUpperCase().replace(/\s+/g, ""))}
-                      />
-                      <Field
-                        label="Nome do cupom"
-                        value={coupon.name}
-                        onChange={(v) => updateCoupon(i, "name", v)}
-                      />
+                      <Field label="Código do cupom" value={coupon.code} onChange={(v) => updateCoupon(i, "code", v.toUpperCase().replace(/\s+/g, ""))} />
+                      <Field label="Nome do cupom" value={coupon.name} onChange={(v) => updateCoupon(i, "name", v)} />
                       <Field
                         label="Desconto (%)"
                         value={String(coupon.discount_percent)}
-                        onChange={(v) =>
-                          updateCoupon(i, "discount_percent", Math.min(100, Math.max(0, Number(v) || 0)))
-                        }
+                        onChange={(v) => updateCoupon(i, "discount_percent", Math.min(100, Math.max(0, Number(v) || 0)))}
                       />
-                      <label className="flex items-center gap-2 text-sm">
-                        <input
-                          type="checkbox"
-                          checked={coupon.enabled}
-                          onChange={(e) => updateCoupon(i, "enabled", e.target.checked)}
-                        />
-                        Cupom ativo
-                      </label>
                       <div className="sm:col-span-2">
-                        <Field
-                          label="Texto mostrado ao cliente"
-                          value={coupon.display_text}
-                          onChange={(v) => updateCoupon(i, "display_text", v)}
-                        />
+                        <Field label="Texto mostrado ao cliente" value={coupon.display_text} onChange={(v) => updateCoupon(i, "display_text", v)} />
                       </div>
+                      <label className="flex items-center gap-3 rounded-xl border border-border/50 bg-card/30 px-3 py-2.5 text-sm">
+                        <input type="checkbox" checked={coupon.enabled} onChange={(e) => updateCoupon(i, "enabled", e.target.checked)} />
+                        <span><strong className="block text-xs">Cupom ativo</strong><span className="text-[11px] text-muted-foreground">Disponível para este plano</span></span>
+                      </label>
                     </div>
                   </div>
                 ))}
@@ -734,7 +802,6 @@ function PainelPage() {
           </Panel>
         </div>
       )}
-
       {tab === "Suporte" && (
         <Panel title="Canais de suporte" actions={<SaveBtn onClick={() => void persist("support")} />}>
           <div className="space-y-5">
