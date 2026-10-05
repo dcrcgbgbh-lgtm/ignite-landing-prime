@@ -57,6 +57,8 @@ export type CouponConfig = {
   enabled: boolean;
   max_uses?: number | null;
   used_count?: number;
+  /** Início do ciclo atual de usos do cupom. */
+  usage_reset_at?: string | null;
 };
 
 export type SectionsSettings = Record<string, boolean>;
