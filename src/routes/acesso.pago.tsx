@@ -41,21 +41,27 @@ function AcessoPagoPage() {
 
   useEffect(() => {
     let alive = true;
-    loadConfig()
-      .then((res) => {
-        if (!alive) return;
-        setSettings(res.settings);
-        setPlans(res.plans);
-      })
-      .catch(() => {
-        if (!alive) return;
-        setSettings(defaultSettings);
-        setError("Não foi possível carregar os planos agora. Tente recarregar a página.");
-      });
+    const refresh = () => {
+      loadConfig()
+        .then((res) => {
+          if (!alive) return;
+          setSettings(res.settings);
+          setPlans(res.plans);
+          setError(null);
+        })
+        .catch(() => {
+          if (!alive) return;
+          setSettings((current) => current ?? defaultSettings);
+          setError("Não foi possível carregar os planos agora. Tente recarregar a página.");
+        });
+    };
+    refresh();
+    const refreshTimer = window.setInterval(refresh, 2000);
     const sessionId = getSessionId();
     if (sessionId) void track({ data: { sessionId, eventType: "paid_access" } }).catch(() => {});
     return () => {
       alive = false;
+      window.clearInterval(refreshTimer);
     };
   }, [loadConfig, track]);
 
@@ -198,7 +204,6 @@ function AcessoPagoPage() {
       <PlanCheckoutModal
         plan={checkout}
         onClose={() => setCheckout(null)}
-        coupons={settings?.coupons ?? []}
       />
     </AccessShell>
   );
