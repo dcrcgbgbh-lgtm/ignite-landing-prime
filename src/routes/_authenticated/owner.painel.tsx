@@ -205,8 +205,18 @@ function PainelPage() {
         display_text: "Use o cupom DESCONTO10 e receba 10% de desconto.",
         enabled: true,
         max_uses: null,
+        usage_reset_at: new Date().toISOString(),
       },
     ]);
+  };
+
+  const resetCouponUsage = (idx: number) => {
+    const coupon = s.coupons[idx];
+    if (!coupon) return;
+    const now = new Date().toISOString();
+    updateCoupon(idx, "usage_reset_at", now);
+    setCouponUsage((current) => ({ ...current, [coupon.id]: 0 }));
+    setMsg(`Limite do cupom ${coupon.code || "sem código"} renovado.`);
   };
 
   return (
@@ -837,6 +847,14 @@ function PainelPage() {
                           {coupon.max_uses && coupon.max_uses > 0 ? ` / ${coupon.max_uses} usados` : " usados"}
                         </span>
                       </div>
+                      <button
+                        type="button"
+                        onClick={() => resetCouponUsage(i)}
+                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/5 px-4 py-2.5 text-xs font-bold text-primary-glow transition-all hover:-translate-y-0.5 hover:bg-primary/10"
+                        title="Zerar os usos confirmados deste ciclo e renovar o limite do cupom"
+                      >
+                        Atualizar limite
+                      </button>
                       <label className="flex items-center gap-3 rounded-xl border border-border/50 bg-card/30 px-3 py-2.5 text-sm">
                         <input type="checkbox" checked={coupon.enabled} onChange={(e) => updateCoupon(i, "enabled", e.target.checked)} />
                         <span><strong className="block text-xs">Cupom ativo</strong><span className="text-[11px] text-muted-foreground">Disponível para este plano</span></span>
