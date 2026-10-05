@@ -159,6 +159,17 @@ export function mergeSettings(raw: Record<string, unknown> | undefined | null): 
       out[key] = { ...(fallback as object), ...(value as object) } as never;
     }
   }
+  out.coupons = out.coupons
+    .filter((c) => c && typeof c === "object")
+    .map((c) => ({
+      id: String(c.id ?? ""),
+      plan_id: (["starter", "premium", "vip"] as const).includes(c.plan_id) ? c.plan_id : "starter",
+      code: String(c.code ?? ""),
+      name: String(c.name ?? ""),
+      discount_percent: Number(c.discount_percent) || 0,
+      display_text: String(c.display_text ?? ""),
+      enabled: c.enabled === true,
+    }));
   return out;
 }
 

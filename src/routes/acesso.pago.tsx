@@ -195,7 +195,11 @@ function AcessoPagoPage() {
         </>
       )}
 
-      <PlanCheckoutModal plan={checkout} onClose={() => setCheckout(null)} />
+      <PlanCheckoutModal
+        plan={checkout}
+        onClose={() => setCheckout(null)}
+        coupons={settings?.coupons ?? []}
+      />
     </AccessShell>
   );
 }
