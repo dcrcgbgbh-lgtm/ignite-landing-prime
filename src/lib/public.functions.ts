@@ -416,6 +416,7 @@ export const pollChat = createServerFn({ method: "POST" })
       .eq("session_id", data.sessionId)
       .maybeSingle();
     if (!conversation) return { messages: [] as ChatMessage[], closed: !settings.chat.enabled };
+    await syncAutomaticMessages(db, conversation.id, settings);
     return { messages: await listMessages(db, conversation.id), closed: !settings.chat.enabled };
   });
 
