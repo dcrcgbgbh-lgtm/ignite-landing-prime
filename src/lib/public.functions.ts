@@ -161,9 +161,19 @@ async function syncAutomaticMessages(
   settings: SiteSettings,
 ): Promise<void> {
   const bm = settings.bot_messages;
+  const stepsContent = buildStepsMessage(settings);
+  const profileContent = bm.profile;
+
+  // These messages existed before the panel controls were added, so some rows
+  // do not have an auto_key. Identify them by their stable bot-message shape.
+  const patterns = {
+    steps: "🚀 Acesso rápido e simples%",
+    profile: "🔥 GHOST XITS | OFICIAL%",
+  } as const;
+
   const automatic = [
-    { key: "steps", enabled: bm.steps_enabled, content: buildStepsMessage(settings) },
-    { key: "profile", enabled: bm.profile_enabled, content: bm.profile },
+    { key: "steps", enabled: bm.steps_enabled, content: stepsContent, pattern: patterns.steps },
+    { key: "profile", enabled: bm.profile_enabled, content: profileContent, pattern: patterns.profile },
   ] as const;
 
   for (const item of automatic) {
@@ -171,10 +181,19 @@ async function syncAutomaticMessages(
       .from("messages")
       .select("id")
       .eq("conversation_id", conversationId)
-      .eq("auto_key", item.key)
+      .eq("sender", "bot")
+      .ilike("content", item.pattern)
+      .order("created_at", { ascending: true })
       .limit(1);
 
     if (!item.enabled) {
+      // Remove both legacy rows and rows created with auto_key.
+      await db
+        .from("messages")
+        .delete()
+        .eq("conversation_id", conversationId)
+        .eq("sender", "bot")
+        .ilike("content", item.pattern);
       await db
         .from("messages")
         .delete()
@@ -186,7 +205,7 @@ async function syncAutomaticMessages(
     if (existing?.[0]?.id) {
       await db
         .from("messages")
-        .update({ content: item.content, sender: "bot", read_by_owner: true })
+        .update({ content: item.content, sender: "bot", read_by_owner: true, auto_key: item.key })
         .eq("id", existing[0].id);
     } else {
       await db.from("messages").insert({
