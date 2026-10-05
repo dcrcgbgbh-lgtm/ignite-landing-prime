@@ -4,6 +4,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { OwnerShell, Panel } from "@/components/owner/OwnerShell";
 import {
   getAdminConfig,
+  getCouponUsage,
   saveSetting,
   savePlan,
   saveBotRule,
@@ -70,6 +71,7 @@ function PainelPage() {
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [couponSync, setCouponSync] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [couponUsage, setCouponUsage] = useState<Record<string, number>>({});
   const couponHydrated = useRef(false);
   const couponSaveTimer = useRef<number | null>(null);
 
@@ -84,6 +86,25 @@ function PainelPage() {
   useEffect(() => {
     void load();
   }, []);
+
+  useEffect(() => {
+    if (!cfg || tab !== "Cupom") return;
+    let alive = true;
+    const refreshUsage = async () => {
+      try {
+        const res = await getCouponUsage();
+        if (alive) setCouponUsage(res.usage);
+      } catch {
+        // A falha de métricas não bloqueia a edição dos cupons.
+      }
+    };
+    void refreshUsage();
+    const timer = window.setInterval(refreshUsage, 2000);
+    return () => {
+      alive = false;
+      window.clearInterval(timer);
+    };
+  }, [cfg, tab]);
 
   useEffect(() => {
     if (!cfg) return;
@@ -183,6 +204,7 @@ function PainelPage() {
         discount_percent: 10,
         display_text: "Use o cupom DESCONTO10 e receba 10% de desconto.",
         enabled: true,
+        max_uses: null,
       },
     ]);
   };
@@ -750,6 +772,12 @@ function PainelPage() {
                             <span>{coupon.plan_id === "starter" ? "Elite Starter · R$ 9,99" : coupon.plan_id === "premium" ? "Elite Premium · R$ 14,90" : "Elite VIP · R$ 29,90"}</span>
                             <span>•</span>
                             <span className="font-bold text-primary-glow">{coupon.discount_percent}% OFF</span>
+                            <span>•</span>
+                            <span className="font-semibold text-foreground">
+                              {coupon.max_uses && coupon.max_uses > 0
+                                ? `${Math.max(0, coupon.max_uses - (couponUsage[coupon.id] ?? 0))} restantes`
+                                : "Usos ilimitados"}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -789,6 +817,25 @@ function PainelPage() {
                       />
                       <div className="sm:col-span-2">
                         <Field label="Texto mostrado ao cliente" value={coupon.display_text} onChange={(v) => updateCoupon(i, "display_text", v)} />
+                      </div>
+                      <label className="block">
+                        <span className="mb-1 block text-xs text-muted-foreground">Limite de usos</span>
+                        <input
+                          type="number"
+                          min={0}
+                          step={1}
+                          value={coupon.max_uses ?? 0}
+                          onChange={(e) => updateCoupon(i, "max_uses", Math.max(0, Math.floor(Number(e.target.value) || 0)) || null)}
+                          className="w-full rounded-xl border border-border/60 bg-card/50 px-3 py-2.5 text-sm outline-none focus:border-primary/60"
+                        />
+                        <span className="mt-1 block text-[10px] text-muted-foreground">0 = ilimitado • conta apenas compras confirmadas</span>
+                      </label>
+                      <div className="rounded-xl border border-primary/15 bg-primary/5 px-3 py-2.5">
+                        <span className="block text-xs font-semibold text-muted-foreground">Uso em tempo real</span>
+                        <span className="mt-1 block text-sm font-black text-foreground">
+                          {couponUsage[coupon.id] ?? 0}
+                          {coupon.max_uses && coupon.max_uses > 0 ? ` / ${coupon.max_uses} usados` : " usados"}
+                        </span>
                       </div>
                       <label className="flex items-center gap-3 rounded-xl border border-border/50 bg-card/30 px-3 py-2.5 text-sm">
                         <input type="checkbox" checked={coupon.enabled} onChange={(e) => updateCoupon(i, "enabled", e.target.checked)} />
