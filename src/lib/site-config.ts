@@ -55,7 +55,7 @@ export type CouponConfig = {
   discount_percent: number;
   display_text: string;
   enabled: boolean;
-  max_uses: number | null;
+  max_uses?: number | null;
   used_count?: number;
 };
 
