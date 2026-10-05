@@ -29,7 +29,7 @@ export const Route = createFileRoute("/_authenticated/owner/painel")({
 type Config = Awaited<ReturnType<typeof getAdminConfig>>;
 type Row = Record<string, unknown>;
 
-const TABS = ["Hero", "Acesso e vídeo", "Bot", "Regras", "Planos", "FAQ", "Seções", "Chat", "Auditoria", "Suporte"] as const;
+const TABS = ["Hero", "Acesso e vídeo", "Bot", "Regras", "Planos", "FAQ", "Seções", "Chat", "Auditoria", "Suporte", "Cupom"] as const;
 
 function Field({
   label,
@@ -133,6 +133,26 @@ function PainelPage() {
     const rules = [...cfg.rules] as Row[];
     rules[idx] = { ...(rules[idx] as Row), [key]: value };
     setCfg({ ...cfg, rules: rules as Config["rules"] });
+  };
+
+  const updateCoupon = (idx: number, key: string, value: unknown) => {
+    const coupons = [...s.coupons];
+    coupons[idx] = { ...coupons[idx], [key]: value };
+    patch("coupons", coupons);
+  };
+
+  const addCoupon = () => {
+    patch("coupons", [
+      ...s.coupons,
+      {
+        id: crypto.randomUUID(),
+        code: "DESCONTO10",
+        name: "Cupom de 10% OFF",
+        discount_percent: 10,
+        display_text: "Use o cupom DESCONTO10 e receba 10% de desconto.",
+        enabled: true,
+      },
+    ]);
   };
 
   return (
@@ -612,6 +632,93 @@ function PainelPage() {
             ))}
           </div>
         </Panel>
+      )}
+
+      {tab === "Cupom" && (
+        <div className="space-y-5">
+          <Panel
+            title="Cupons de desconto"
+            actions={
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={addCoupon}
+                  className="rounded-xl border border-border/60 px-3 py-2 text-xs font-semibold hover:border-primary/50"
+                >
+                  + Novo cupom
+                </button>
+                <SaveBtn onClick={() => void persist("coupons")} />
+              </div>
+            }
+          >
+            <div className="mb-4 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-xs text-muted-foreground">
+              Crie códigos que o cliente digita na janela de compra. O percentual é aplicado automaticamente ao valor do plano e ao código Pix gerado.
+            </div>
+
+            {s.coupons.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-border/60 p-6 text-center text-sm text-muted-foreground">
+                Nenhum cupom criado. Clique em <strong className="text-foreground">+ Novo cupom</strong>.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {s.coupons.map((coupon, i) => (
+                  <div key={coupon.id} className="rounded-2xl border border-border/60 bg-card/40 p-4">
+                    <div className="mb-4 flex items-center justify-between gap-3">
+                      <div>
+                        <p className="font-semibold">{coupon.name || "Novo cupom"}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Código: {coupon.code || "—"} · {coupon.discount_percent}% OFF
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => patch("coupons", s.coupons.filter((_, index) => index !== i))}
+                        className="rounded-xl border border-destructive/40 px-3 py-2 text-xs text-destructive"
+                      >
+                        Excluir
+                      </button>
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Field
+                        label="Código do cupom"
+                        value={coupon.code}
+                        onChange={(v) => updateCoupon(i, "code", v.toUpperCase().replace(/\s+/g, ""))}
+                      />
+                      <Field
+                        label="Nome do cupom"
+                        value={coupon.name}
+                        onChange={(v) => updateCoupon(i, "name", v)}
+                      />
+                      <Field
+                        label="Desconto (%)"
+                        value={String(coupon.discount_percent)}
+                        onChange={(v) =>
+                          updateCoupon(i, "discount_percent", Math.min(100, Math.max(0, Number(v) || 0)))
+                        }
+                      />
+                      <label className="flex items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={coupon.enabled}
+                          onChange={(e) => updateCoupon(i, "enabled", e.target.checked)}
+                        />
+                        Cupom ativo
+                      </label>
+                      <div className="sm:col-span-2">
+                        <Field
+                          label="Texto mostrado ao cliente"
+                          value={coupon.display_text}
+                          onChange={(v) => updateCoupon(i, "display_text", v)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Panel>
+        </div>
       )}
 
       {tab === "Suporte" && (
