@@ -379,14 +379,14 @@ export const saveSetting = createServerFn({ method: "POST" })
 
     if (data.key === "bot_messages") {
       const bot = data.value as Record<string, unknown>;
-      if (bot.steps_enabled === false) {
+      if (bot["steps_enabled"] === false) {
         await db
           .from("messages")
           .delete()
           .eq("sender", "bot")
           .ilike("content", "🚀 Acesso rápido e simples%");
       }
-      if (bot.profile_enabled === false) {
+      if (bot["profile_enabled"] === false) {
         await db
           .from("messages")
           .delete()

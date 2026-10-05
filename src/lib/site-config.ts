@@ -147,8 +147,16 @@ export function mergeSettings(raw: Record<string, unknown> | undefined | null): 
   if (!raw) return out;
   for (const key of Object.keys(defaultSettings) as (keyof SiteSettings)[]) {
     const value = raw[key];
-    if (value && typeof value === "object") {
-      out[key] = { ...(defaultSettings[key] as object), ...(value as object) } as never;
+    const fallback = defaultSettings[key];
+    if (Array.isArray(fallback)) {
+      if (Array.isArray(value)) {
+        out[key] = value as never;
+      } else if (value && typeof value === "object") {
+        // Recover arrays previously saved as index-keyed objects
+        out[key] = Object.values(value as object) as never;
+      }
+    } else if (value && typeof value === "object" && !Array.isArray(value)) {
+      out[key] = { ...(fallback as object), ...(value as object) } as never;
     }
   }
   return out;

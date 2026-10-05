@@ -1,3 +1,4 @@
+import type { CouponConfig } from "@/lib/site-config";
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { OwnerShell, Panel } from "@/components/owner/OwnerShell";
@@ -137,7 +138,7 @@ function PainelPage() {
 
   const updateCoupon = (idx: number, key: string, value: unknown) => {
     const coupons = [...s.coupons];
-    coupons[idx] = { ...coupons[idx], [key]: value };
+    coupons[idx] = { ...(coupons[idx] as CouponConfig), [key]: value } as CouponConfig;
     patch("coupons", coupons);
   };
 
