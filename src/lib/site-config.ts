@@ -49,6 +49,7 @@ export type BotMessages = {
 export type FaqSettings = { items: { q: string; a: string }[] };
 export type CouponConfig = {
   id: string;
+  plan_id: "starter" | "premium" | "vip";
   code: string;
   name: string;
   discount_percent: number;
