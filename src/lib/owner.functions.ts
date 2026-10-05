@@ -483,7 +483,71 @@ export const confirmPurchase = createServerFn({ method: "POST" })
   })
   .handler(async ({ context, data }) => {
     const { db, userId } = await requireOwner(context);
-    await db
+
+    const { data: purchase } = await db
+      .from("purchase_events")
+      .select("id, session_id, plan_id, status")
+      .eq("id", data.id)
+      .maybeSingle();
+
+    if (!purchase) throw new Error("Compra não encontrada.");
+    if (purchase.status === "confirmed") return { ok: true, alreadyConfirmed: true };
+
+    let couponRedemption: Record<string, unknown> | null = null;
+    if (purchase.session_id && purchase.plan_id) {
+      const { data: appliedRows } = await db
+        .from("visitor_events")
+        .select("metadata, created_at")
+        .eq("session_id", purchase.session_id)
+        .eq("event_type", "coupon_applied")
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      const applied = (appliedRows ?? []).find((row) => {
+        const metadata = (row.metadata ?? {}) as Record<string, unknown>;
+        return String(metadata.plan_id ?? "") === String(purchase.plan_id);
+      });
+
+      if (applied) {
+        const metadata = (applied.metadata ?? {}) as Record<string, unknown>;
+        const couponId = String(metadata.coupon_id ?? "");
+        if (couponId) {
+          const { data: settingsRow } = await db
+            .from("site_settings")
+            .select("value")
+            .eq("key", "coupons")
+            .maybeSingle();
+          const rawCoupons = Array.isArray(settingsRow?.value) ? settingsRow.value : [];
+          const coupon = rawCoupons.find((item) => {
+            const row = item as Record<string, unknown>;
+            return String(row.id ?? "") === couponId;
+          }) as Record<string, unknown> | undefined;
+
+          if (coupon) {
+            const maxUses = Number(coupon.max_uses);
+            const { count } = await db
+              .from("visitor_events")
+              .select("id", { count: "exact", head: true })
+              .eq("event_type", "coupon_redeemed")
+              .contains("metadata", { coupon_id: couponId });
+
+            if (Number.isFinite(maxUses) && maxUses > 0 && (count ?? 0) >= maxUses) {
+              throw new Error("Este cupom atingiu o limite de usos antes da confirmação.");
+            }
+
+            couponRedemption = {
+              coupon_id: couponId,
+              code: String(metadata.code ?? coupon.code ?? ""),
+              plan_id: String(purchase.plan_id),
+              discount_percent: Number(metadata.discount_percent ?? coupon.discount_percent ?? 0),
+              purchase_id: purchase.id,
+            };
+          }
+        }
+      }
+    }
+
+    const { data: confirmed, error } = await db
       .from("purchase_events")
       .update({
         status: "confirmed",
@@ -491,9 +555,33 @@ export const confirmPurchase = createServerFn({ method: "POST" })
         confirmed_by: userId,
         note: data.note ?? null,
       })
-      .eq("id", data.id);
-    await audit(db, userId, "confirm_purchase", `purchase:${data.id}`, {});
-    return { ok: true };
+      .eq("id", data.id)
+      .neq("status", "confirmed")
+      .select("id")
+      .maybeSingle();
+
+    if (error) throw new Error(error.message);
+    if (!confirmed?.id) return { ok: true, alreadyConfirmed: true };
+
+    if (couponRedemption) {
+      const { error: redemptionError } = await db.from("visitor_events").insert({
+        session_id: purchase.session_id,
+        event_type: "coupon_redeemed",
+        metadata: couponRedemption,
+      });
+      if (redemptionError) {
+        await db
+          .from("purchase_events")
+          .update({ status: "checkout_started", confirmed_at: null, confirmed_by: null, note: null })
+          .eq("id", data.id);
+        throw new Error(redemptionError.message);
+      }
+    }
+
+    await audit(db, userId, "confirm_purchase", `purchase:${data.id}`, {
+      coupon_id: couponRedemption?.coupon_id ?? null,
+    });
+    return { ok: true, couponUsed: Boolean(couponRedemption) };
   });
 
 export const listPurchases = createServerFn({ method: "POST" })
