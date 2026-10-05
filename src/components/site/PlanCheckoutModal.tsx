@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Check, Copy, Loader2, QrCode, Tag, X } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { getPublicConfig } from "@/lib/public.functions";
@@ -31,6 +31,8 @@ export function PlanCheckoutModal({
   const [applied, setApplied] = useState<CouponConfig | null>(null);
   const [couponMessage, setCouponMessage] = useState<{ text: string; ok: boolean } | null>(null);
   const loadConfig = useServerFn(getPublicConfig);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     if (!plan) return;
@@ -45,7 +47,7 @@ export function PlanCheckoutModal({
         .catch(() => setLoadedCoupons([]));
     }
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") onCloseRef.current();
     };
     document.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
@@ -54,7 +56,7 @@ export function PlanCheckoutModal({
       document.body.style.overflow = "";
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [plan, onClose]);
+  }, [plan]);
 
   if (!plan) return null;
 
