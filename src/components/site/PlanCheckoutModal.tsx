@@ -209,7 +209,10 @@ export function PlanCheckoutModal({
             {applied ? (
               <>
                 <span className="mr-2 text-muted-foreground line-through">R$ {formatBrl(baseCents)}</span>
-                R$ {formatBrl(finalCents)}
+                <span>R$ {formatBrl(finalCents)}</span>
+                <span className="ml-2 text-[10px] font-bold text-primary-glow">
+                  ({Number(applied.discount_percent)}% OFF)
+                </span>
               </>
             ) : (
               <>R$ {plan.price}</>
