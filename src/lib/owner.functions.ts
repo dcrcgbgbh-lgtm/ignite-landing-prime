@@ -364,6 +364,24 @@ export const getAdminConfig = createServerFn({ method: "POST" })
     };
   });
 
+export const getCouponUsage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { db } = await requireOwner(context);
+    const { data } = await db
+      .from("visitor_events")
+      .select("metadata")
+      .eq("event_type", "coupon_redeemed")
+      .limit(5000);
+    const usage: Record<string, number> = {};
+    for (const row of data ?? []) {
+      const metadata = (row.metadata ?? {}) as Record<string, unknown>;
+      const couponId = String(metadata.coupon_id ?? "");
+      if (couponId) usage[couponId] = (usage[couponId] ?? 0) + 1;
+    }
+    return { usage };
+  });
+
 export const saveSetting = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { key: string; value: Record<string, unknown> }) => {
@@ -372,9 +390,19 @@ export const saveSetting = createServerFn({ method: "POST" })
   })
   .handler(async ({ context, data }) => {
     const { db, userId } = await requireOwner(context);
+    const value =
+      data.key === "coupons"
+        ? (Array.isArray(data.value)
+            ? data.value.map((coupon) => {
+                const row = { ...(coupon as Record<string, unknown>) };
+                delete row["used_count"];
+                return row;
+              })
+            : data.value)
+        : data.value;
     const { error } = await db
       .from("site_settings")
-      .upsert({ key: data.key, value: data.value as never, is_public: true }, { onConflict: "key" });
+      .upsert({ key: data.key, value: value as never, is_public: true }, { onConflict: "key" });
     if (error) throw new Error(error.message);
 
     if (data.key === "bot_messages") {
