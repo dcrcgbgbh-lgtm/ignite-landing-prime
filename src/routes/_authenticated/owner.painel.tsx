@@ -146,6 +146,7 @@ function PainelPage() {
       ...s.coupons,
       {
         id: crypto.randomUUID(),
+        plan_id: "starter",
         code: "DESCONTO10",
         name: "Cupom de 10% OFF",
         discount_percent: 10,
@@ -667,7 +668,7 @@ function PainelPage() {
                       <div>
                         <p className="font-semibold">{coupon.name || "Novo cupom"}</p>
                         <p className="text-xs text-muted-foreground">
-                          Código: {coupon.code || "—"} · {coupon.discount_percent}% OFF
+                          Plano: {coupon.plan_id === "starter" ? "R$ 9,99" : coupon.plan_id === "premium" ? "R$ 14,90" : "R$ 29,90"} · Código: {coupon.code || "—"} · {coupon.discount_percent}% OFF
                         </p>
                       </div>
                       <button
@@ -680,6 +681,18 @@ function PainelPage() {
                     </div>
 
                     <div className="grid gap-3 sm:grid-cols-2">
+                      <label className="block">
+                        <span className="mb-1 block text-xs text-muted-foreground">Plano do cupom</span>
+                        <select
+                          value={coupon.plan_id}
+                          onChange={(e) => updateCoupon(i, "plan_id", e.target.value)}
+                          className="w-full rounded-xl border border-border/60 bg-card/50 px-3 py-2.5 text-sm outline-none focus:border-primary/60"
+                        >
+                          <option value="starter">R$ 9,99 — Elite Starter</option>
+                          <option value="premium">R$ 14,90 — Elite Premium</option>
+                          <option value="vip">R$ 29,90 — Elite VIP</option>
+                        </select>
+                      </label>
                       <Field
                         label="Código do cupom"
                         value={coupon.code}
