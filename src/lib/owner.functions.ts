@@ -523,26 +523,24 @@ export const confirmPurchase = createServerFn({ method: "POST" })
             return String(row.id ?? "") === couponId;
           }) as Record<string, unknown> | undefined;
 
-          if (coupon) {
-            const maxUses = Number(coupon.max_uses);
-            const { count } = await db
-              .from("visitor_events")
-              .select("id", { count: "exact", head: true })
-              .eq("event_type", "coupon_redeemed")
-              .contains("metadata", { coupon_id: couponId });
+          const maxUses = Number(coupon?.max_uses);
+          const { count } = await db
+            .from("visitor_events")
+            .select("id", { count: "exact", head: true })
+            .eq("event_type", "coupon_redeemed")
+            .contains("metadata", { coupon_id: couponId });
 
-            if (Number.isFinite(maxUses) && maxUses > 0 && (count ?? 0) >= maxUses) {
-              throw new Error("Este cupom atingiu o limite de usos antes da confirmação.");
-            }
-
-            couponRedemption = {
-              coupon_id: couponId,
-              code: String(metadata.code ?? coupon.code ?? ""),
-              plan_id: String(purchase.plan_id),
-              discount_percent: Number(metadata.discount_percent ?? coupon.discount_percent ?? 0),
-              purchase_id: purchase.id,
-            };
+          if (coupon && Number.isFinite(maxUses) && maxUses > 0 && (count ?? 0) >= maxUses) {
+            throw new Error("Este cupom atingiu o limite de usos antes da confirmação.");
           }
+
+          couponRedemption = {
+            coupon_id: couponId,
+            code: String(metadata.code ?? coupon?.code ?? ""),
+            plan_id: String(purchase.plan_id),
+            discount_percent: Number(metadata.discount_percent ?? coupon?.discount_percent ?? 0),
+            purchase_id: purchase.id,
+          };
         }
       }
     }
