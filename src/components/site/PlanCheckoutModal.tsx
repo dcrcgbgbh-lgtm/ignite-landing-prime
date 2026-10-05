@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Check, Copy, Loader2, QrCode, X } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
-import { getPublicConfig, recordCouponApplied } from "@/lib/public.functions";
+import { getPublicConfig, getPendingCoupon, recordCouponApplied } from "@/lib/public.functions";
 import type { CouponConfig, PlanConfig } from "@/lib/site-config";
 import {
   activeCouponsForPlan,
@@ -47,6 +47,7 @@ export function PlanCheckoutModal({
   const [applied, setApplied] = useState<CouponConfig | null>(null);
   const [couponMessage, setCouponMessage] = useState<{ text: string; ok: boolean } | null>(null);
   const loadConfig = useServerFn(getPublicConfig);
+  const loadPendingCoupon = useServerFn(getPendingCoupon);
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
 
@@ -67,6 +68,21 @@ export function PlanCheckoutModal({
         .catch(() => {});
     };
     refreshCoupons();
+
+    // Se o usuário já aplicou um cupom nesta compra e apenas fechou o modal,
+    // restaura o cupom e, principalmente, o preço com desconto. Depois de uma
+    // compra confirmada o servidor não retorna mais como pendente, permitindo
+    // reutilizar o mesmo cupom normalmente.
+    loadPendingCoupon({ data: { sessionId: getCheckoutSessionId(), planId: plan.id } })
+      .then((res) => {
+        if (!alive || !res.pending || !res.coupon) return;
+        setCouponCode(res.coupon.code);
+        setApplied(res.coupon);
+        setCouponMessage({ text: res.message ?? "Este cupom já foi aplicado nesta compra. Finalize o pagamento antes de usar novamente.", ok: false });
+        setQrState("loading");
+        setCopied(false);
+      })
+      .catch(() => {});
     const couponTimer = window.setInterval(refreshCoupons, 2000);
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onCloseRef.current();
