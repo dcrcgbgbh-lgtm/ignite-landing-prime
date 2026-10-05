@@ -76,7 +76,7 @@ export function CheckoutModal({ planId, onClose }: { planId: PlanId | null; onCl
     setCouponMessage(null);
     loadConfig()
       .then((res: { settings: { coupons?: CouponConfig[] } }) => {
-        setCoupons((res.settings.coupons ?? []).filter((coupon) => coupon.enabled && coupon.code.trim()));
+        setCoupons((res.settings.coupons ?? []).filter((coupon) => coupon.enabled && coupon.code.trim() && coupon.plan_id === planId));
       })
       .catch(() => setCoupons([]));
     const onKey = (e: KeyboardEvent) => {
