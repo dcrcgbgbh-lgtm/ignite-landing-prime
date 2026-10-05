@@ -334,14 +334,17 @@ async function syncAutomaticMessages(
       .order("created_at", { ascending: true })
       .limit(1);
 
-    if (!item.enabled) {
-      // Remove both legacy rows and rows created with auto_key.
+    if (!item.enabled || !item.content.trim()) {
+      // Não cria mensagens vazias. Sem esse guard, o polling tenta inserir
+      // novamente a cada ciclo quando uma mensagem automática está em branco,
+      // gerando aqueles "balões" vazios no chat grátis.
       await db
         .from("messages")
         .delete()
         .eq("conversation_id", conversationId)
         .eq("sender", "bot")
         .ilike("content", item.pattern);
+      if (!item.enabled) continue;
       continue;
     }
 
