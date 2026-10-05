@@ -47,6 +47,15 @@ export type BotMessages = {
   profile: string;
 };
 export type FaqSettings = { items: { q: string; a: string }[] };
+export type CouponConfig = {
+  id: string;
+  code: string;
+  name: string;
+  discount_percent: number;
+  display_text: string;
+  enabled: boolean;
+};
+
 export type SectionsSettings = Record<string, boolean>;
 
 export type BrandingSettings = { site_name: string };
@@ -62,6 +71,7 @@ export type SiteSettings = {
   branding: BrandingSettings;
   chat: ChatSettings;
   support: SupportSettings;
+  coupons: CouponConfig[];
   hero: HeroSettings;
   access: AccessSettings;
   free_access: FreeAccessSettings;
@@ -83,6 +93,7 @@ export const defaultSettings: SiteSettings = {
     instagram_url: "", instagram_label: "Instagram", instagram_enabled: true,
     show_in_free_access: true, show_in_paid_access: true, show_in_chat: true,
   },
+  coupons: [],
   hero: {
     title: "FF 2022 Elite",
     subtitle: "O software mais estável, atualizado e completo.",
