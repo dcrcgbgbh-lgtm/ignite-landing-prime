@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Check, Copy, Loader2, QrCode, Tag, X } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { pixConfig, type PlanId } from "@/config/pix";
@@ -94,10 +94,9 @@ export function CheckoutModal({ planId, onClose }: { planId: PlanId | null; onCl
 
   const plan = pixConfig[planId];
   const baseCents = parseBrlCents(plan.amount);
-  const discountedCents = useMemo(() => {
-    if (!appliedCoupon) return baseCents;
-    return Math.max(0, Math.round(baseCents * (1 - appliedCoupon.discount_percent / 100)));
-  }, [appliedCoupon, baseCents]);
+  const discountedCents = appliedCoupon
+    ? Math.max(0, Math.round(baseCents * (1 - appliedCoupon.discount_percent / 100)))
+    : baseCents;
   const hasKey = plan.payload.trim().length > 0;
   const effectivePayload = appliedCoupon ? withPixAmount(plan.payload, discountedCents) : plan.payload;
   const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=0&data=${encodeURIComponent(
