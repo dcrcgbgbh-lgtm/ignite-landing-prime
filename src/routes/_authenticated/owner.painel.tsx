@@ -137,7 +137,7 @@ function PainelPage() {
 
   const updateCoupon = (idx: number, key: string, value: unknown) => {
     const coupons = [...s.coupons];
-    coupons[idx] = { ...coupons[idx], [key]: value };
+    coupons[idx] = { ...(coupons[idx] as CouponConfig), [key]: value } as CouponConfig;
     patch("coupons", coupons);
   };
 

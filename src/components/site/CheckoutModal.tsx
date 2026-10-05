@@ -208,7 +208,7 @@ export function CheckoutModal({ planId, onClose }: { planId: PlanId | null; onCl
               <div>
                 <p className="text-xs font-bold text-foreground">🏷️ Oferta com cupom</p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {coupons[0].display_text || `Use o cupom ${coupons[0].code} e receba ${coupons[0].discount_percent}% de desconto.`}
+                  {coupons[0]!.display_text || `Use o cupom ${coupons[0]!.code} e receba ${coupons[0]!.discount_percent}% de desconto.`}
                 </p>
               </div>
             </div>
