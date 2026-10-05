@@ -196,23 +196,19 @@ async function syncAutomaticMessages(
         .ilike("content", item.pattern);
       await db
         .from("messages")
-        .delete()
-        .eq("conversation_id", conversationId)
-        .eq("auto_key", item.key);
       continue;
     }
 
     if (existing?.[0]?.id) {
       await db
         .from("messages")
-        .update({ content: item.content, sender: "bot", read_by_owner: true, auto_key: item.key })
+        .update({ content: item.content, sender: "bot", read_by_owner: true })
         .eq("id", existing[0].id);
     } else {
       await db.from("messages").insert({
         conversation_id: conversationId,
         sender: "bot",
         content: item.content,
-        auto_key: item.key,
         read_by_owner: true,
       });
     }
