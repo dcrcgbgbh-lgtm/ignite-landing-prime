@@ -297,7 +297,17 @@ function PainelPage() {
               .map((k) => (
                 <Field
                   key={k}
-                  label={k}
+                  label={
+                    k === "profile"
+                      ? "Mensagem final automática"
+                      : k === "greeting_morning"
+                        ? "Bom dia"
+                        : k === "greeting_afternoon"
+                          ? "Boa tarde"
+                          : k === "greeting_evening"
+                            ? "Boa noite"
+                            : k
+                  }
                   value={String(s.bot_messages[k] ?? "")}
                   onChange={(v) => patch("bot_messages", { ...s.bot_messages, [k]: v })}
                   textarea
