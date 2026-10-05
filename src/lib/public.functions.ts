@@ -93,7 +93,7 @@ async function attachCouponUsage(db: AdminClient, settings: SiteSettings): Promi
       const { count } = await db
         .from("visitor_events")
         .select("id", { count: "exact", head: true })
-        .eq("event_type", "coupon_redeemed")
+        .eq("event_type", "coupon_applied")
         .contains("metadata", { coupon_id: coupon.id });
       return { ...coupon, used_count: count ?? 0 };
     }),
@@ -141,7 +141,7 @@ export const recordCouponApplied = createServerFn({ method: "POST" })
     const { count } = await db
       .from("visitor_events")
       .select("id", { count: "exact", head: true })
-      .eq("event_type", "coupon_redeemed")
+      .eq("event_type", "coupon_applied")
       .contains("metadata", { coupon_id: coupon.id });
 
     const maxUses = Number(coupon.max_uses);
