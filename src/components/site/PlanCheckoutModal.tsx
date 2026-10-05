@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Check, Copy, Loader2, QrCode, Tag, X } from "lucide-react";
+import { Check, Copy, Loader2, QrCode, X } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { getPublicConfig } from "@/lib/public.functions";
 import type { CouponConfig, PlanConfig } from "@/lib/site-config";
@@ -177,7 +177,7 @@ export function PlanCheckoutModal({
 
         <div className="mt-5 rounded-2xl border border-primary/25 bg-primary/5 p-4 text-left">
           <p className="flex items-center gap-2 text-xs font-bold tracking-widest text-foreground">
-            <Tag size={14} className="text-primary-glow" /> 🏷️ CUPOM DE DESCONTO
+            🏷️ CUPOM DE DESCONTO
           </p>
           {promo && !applied && (
             <p className="mt-2 text-xs text-muted-foreground">
