@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Check, Copy, Loader2, QrCode, X } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { getPublicConfig, recordCouponApplied } from "@/lib/public.functions";
+import { getSessionId } from "@/lib/session";
 import type { CouponConfig, PlanConfig } from "@/lib/site-config";
 import {
   activeCouponsForPlan,
