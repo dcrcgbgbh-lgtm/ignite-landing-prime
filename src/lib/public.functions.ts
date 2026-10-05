@@ -155,6 +155,51 @@ function buildStepsMessage(settings: SiteSettings): string {
   return `${steps_title}\n\nAcesse pelo link abaixo:\n${link}\n\n✅ Passo a passo:\n${lines}`;
 }
 
+async function syncAutomaticMessages(
+  db: AdminClient,
+  conversationId: string,
+  settings: SiteSettings,
+): Promise<void> {
+  const bm = settings.bot_messages;
+  const automatic = [
+    { key: "steps", enabled: bm.steps_enabled, content: buildStepsMessage(settings) },
+    { key: "profile", enabled: bm.profile_enabled, content: bm.profile },
+  ] as const;
+
+  for (const item of automatic) {
+    const { data: existing } = await db
+      .from("messages")
+      .select("id")
+      .eq("conversation_id", conversationId)
+      .eq("auto_key", item.key)
+      .limit(1);
+
+    if (!item.enabled) {
+      await db
+        .from("messages")
+        .delete()
+        .eq("conversation_id", conversationId)
+        .eq("auto_key", item.key);
+      continue;
+    }
+
+    if (existing?.[0]?.id) {
+      await db
+        .from("messages")
+        .update({ content: item.content, sender: "bot", read_by_owner: true })
+        .eq("id", existing[0].id);
+    } else {
+      await db.from("messages").insert({
+        conversation_id: conversationId,
+        sender: "bot",
+        content: item.content,
+        auto_key: item.key,
+        read_by_owner: true,
+      });
+    }
+  }
+}
+
 export const startChat = createServerFn({ method: "POST" })
   .inputValidator((input: { sessionId: string; greeting: "morning" | "afternoon" | "evening" }) => {
     if (!input?.sessionId) throw new Error("Sessão inválida");
@@ -191,11 +236,7 @@ export const startChat = createServerFn({ method: "POST" })
       const autos = [
         { key: "greeting", content: greeting },
         { key: "welcome", content: bm.welcome },
-        { key: "steps", content: buildStepsMessage(settings) },
         { key: "print_hint", content: settings.free_access.print_hint },
-        ...(settings.bot_messages.profile.trim()
-          ? [{ key: "profile", content: settings.bot_messages.profile }]
-          : []),
       ];
 
       const { data: existing } = await db
@@ -215,7 +256,11 @@ export const startChat = createServerFn({ method: "POST" })
           read_by_owner: true,
         }));
       if (toInsert.length) await db.from("messages").insert(toInsert);
+    }
 
+    await syncAutomaticMessages(db, conversation.id, settings);
+
+    if (!conversation.bootstrapped) {
       await db
         .from("conversations")
         .update({
