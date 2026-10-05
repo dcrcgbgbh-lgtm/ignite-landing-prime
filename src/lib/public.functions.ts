@@ -85,18 +85,83 @@ function normalize(text: string): string {
 
 // ---------------------------------------------------------------- public data
 
+async function attachCouponUsage(db: AdminClient, settings: SiteSettings): Promise<SiteSettings> {
+  if (!settings.coupons.length) return settings;
+  const coupons = await Promise.all(
+    settings.coupons.map(async (coupon) => {
+      if (!coupon.id) return coupon;
+      const { count } = await db
+        .from("visitor_events")
+        .select("id", { count: "exact", head: true })
+        .eq("event_type", "coupon_redeemed")
+        .contains("metadata", { coupon_id: coupon.id });
+      return { ...coupon, used_count: count ?? 0 };
+    }),
+  );
+  return { ...settings, coupons };
+}
+
 export const getPublicConfig = createServerFn({ method: "POST" }).handler(async () => {
   const db = await admin();
-  const [settings, plansRes] = await Promise.all([
+  const [rawSettings, plansRes] = await Promise.all([
     loadSettings(db),
     db.from("plans").select("*").eq("active", true).order("sort_order", { ascending: true }),
   ]);
+  const settings = await attachCouponUsage(db, rawSettings);
   const plans = ((plansRes.data ?? []) as unknown as Record<string, unknown>[]).map((p) => ({
     ...(p as unknown as PlanConfig),
     features: Array.isArray(p['features']) ? (p['features'] as string[]) : [],
   })) as PlanConfig[];
   return { settings, plans };
 });
+
+export const recordCouponApplied = createServerFn({ method: "POST" })
+  .inputValidator((input: {
+    sessionId: string;
+    planId: string;
+    couponId: string;
+    code: string;
+    discountPercent: number;
+  }) => {
+    if (!input?.sessionId || input.sessionId.length > 80) throw new Error("Sessão inválida.");
+    if (!input?.planId || !input?.couponId || !input?.code) throw new Error("Cupom inválido.");
+    return input;
+  })
+  .handler(async ({ data }) => {
+    const db = await admin();
+    const settings = await loadSettings(db);
+    const coupon = settings.coupons.find(
+      (c) => c.id === data.couponId &&
+        c.enabled &&
+        c.plan_id === data.planId &&
+        c.code.trim().toUpperCase() === data.code.trim().toUpperCase(),
+    );
+    if (!coupon) throw new Error("Cupom inválido ou desativado.");
+
+    const { count } = await db
+      .from("visitor_events")
+      .select("id", { count: "exact", head: true })
+      .eq("event_type", "coupon_redeemed")
+      .contains("metadata", { coupon_id: coupon.id });
+
+    const maxUses = Number(coupon.max_uses);
+    if (Number.isFinite(maxUses) && maxUses > 0 && (count ?? 0) >= maxUses) {
+      throw new Error("Este cupom já atingiu o limite de usos.");
+    }
+
+    const { error } = await db.from("visitor_events").insert({
+      session_id: data.sessionId,
+      event_type: "coupon_applied",
+      metadata: {
+        coupon_id: coupon.id,
+        code: coupon.code,
+        plan_id: coupon.plan_id,
+        discount_percent: Number(coupon.discount_percent),
+      },
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true, coupon: { ...coupon, used_count: count ?? 0, remaining: maxUses > 0 ? Math.max(0, maxUses - (count ?? 0)) : null } };
+  });
 
 // ------------------------------------------------------------------- métricas
 
