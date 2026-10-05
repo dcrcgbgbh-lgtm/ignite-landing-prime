@@ -216,9 +216,16 @@ export function PlanCheckoutModal({
                 </div>
               </div>
               {promo && (
-                <span className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[10px] font-extrabold tracking-wider text-primary-glow">
-                  {promo.discount_percent}% OFF
-                </span>
+                <div className="flex flex-col items-end gap-1">
+                  <span className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[10px] font-extrabold tracking-wider text-primary-glow">
+                    {promo.discount_percent}% OFF
+                  </span>
+                  {promo.max_uses && promo.max_uses > 0 && (
+                    <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      {Math.max(0, promo.max_uses - Number(promo.used_count ?? 0))} disponíveis
+                    </span>
+                  )}
+                </div>
               )}
             </div>
 
