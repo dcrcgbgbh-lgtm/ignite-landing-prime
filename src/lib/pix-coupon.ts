@@ -85,6 +85,11 @@ export function validateCoupon(code: string, planId: string, coupons: CouponConf
   if (!Number.isFinite(pct) || pct <= 0 || pct > 100) {
     return { ok: false, message: "Este cupom não possui um desconto válido." };
   }
+  const maxUses = Number(forPlan.max_uses);
+  const usedCount = Number(forPlan.used_count ?? 0);
+  if (Number.isFinite(maxUses) && maxUses > 0 && usedCount >= maxUses) {
+    return { ok: false, message: "Este cupom já atingiu o limite de usos." };
+  }
   return { ok: true, coupon: forPlan };
 }
 
