@@ -50,7 +50,7 @@ function AcessoPage() {
         });
     };
     refresh();
-    const timer = window.setInterval(refresh, 15000);
+    const timer = window.setInterval(refresh, 2000);
     const sessionId = getSessionId();
     if (sessionId) void track({ data: { sessionId, eventType: "access_flow" } }).catch(() => {});
     return () => {

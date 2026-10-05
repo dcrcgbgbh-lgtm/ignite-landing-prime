@@ -256,7 +256,7 @@ function Index() {
         });
     };
     refresh();
-    const timer = window.setInterval(refresh, 15000);
+    const timer = window.setInterval(refresh, 2000);
     return () => {
       alive = false;
       window.clearInterval(timer);

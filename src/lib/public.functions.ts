@@ -85,7 +85,7 @@ function normalize(text: string): string {
 
 // ---------------------------------------------------------------- public data
 
-export const getPublicConfig = createServerFn({ method: "GET" }).handler(async () => {
+export const getPublicConfig = createServerFn({ method: "POST" }).handler(async () => {
   const db = await admin();
   const [settings, plansRes] = await Promise.all([
     loadSettings(db),

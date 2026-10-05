@@ -55,7 +55,7 @@ function AcessoGratisPage() {
         .catch(() => { if (alive) setSettings((current) => current ?? defaultSettings); });
     };
     refresh();
-    const timer = window.setInterval(refresh, 15000);
+    const timer = window.setInterval(refresh, 2000);
     return () => { alive = false; window.clearInterval(timer); };
   }, [loadConfig]);
 
