@@ -94,7 +94,8 @@ async function attachCouponUsage(db: AdminClient, settings: SiteSettings): Promi
         .from("visitor_events")
         .select("id", { count: "exact", head: true })
         .eq("event_type", "coupon_redeemed")
-        .contains("metadata", { coupon_id: coupon.id });
+        .contains("metadata", { coupon_id: coupon.id })
+        .gte("created_at", coupon.usage_reset_at || "1970-01-01T00:00:00.000Z");
       return { ...coupon, used_count: count ?? 0 };
     }),
   );
@@ -147,6 +148,7 @@ export const recordCouponApplied = createServerFn({ method: "POST" })
       .eq("session_id", data.sessionId)
       .eq("event_type", "coupon_applied")
       .contains("metadata", { coupon_id: coupon.id, plan_id: coupon.plan_id })
+      .gte("created_at", coupon.usage_reset_at || "1970-01-01T00:00:00.000Z")
       .order("created_at", { ascending: false })
       .limit(20);
 
