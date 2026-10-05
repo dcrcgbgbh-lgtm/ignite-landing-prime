@@ -385,7 +385,6 @@ export const saveSetting = createServerFn({ method: "POST" })
           .delete()
           .eq("sender", "bot")
           .ilike("content", "🚀 Acesso rápido e simples%");
-        await db.from("messages").delete().eq("auto_key", "steps");
       }
       if (bot.profile_enabled === false) {
         await db
@@ -393,7 +392,6 @@ export const saveSetting = createServerFn({ method: "POST" })
           .delete()
           .eq("sender", "bot")
           .ilike("content", "🔥 GHOST XITS | OFICIAL%");
-        await db.from("messages").delete().eq("auto_key", "profile");
       }
     }
 
