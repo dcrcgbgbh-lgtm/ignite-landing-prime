@@ -31,6 +31,8 @@ export type AccessSettings = {
 };
 export type FreeAccessSettings = { tiktok_url: string; print_hint: string };
 export type BotMessages = {
+  steps_enabled: boolean;
+  profile_enabled: boolean;
   greeting_morning: string;
   greeting_afternoon: string;
   greeting_evening: string;
@@ -104,6 +106,8 @@ export const defaultSettings: SiteSettings = {
       "📸 Agora mande o print aqui no chat.\n🟢 Se der certo: envie o print da tela aberta.\n🔴 Se aparecer um erro real: envie um print da mensagem de erro para identificar o problema.\n⚡ Processo rápido, organizado e sem complicação.",
   },
   bot_messages: {
+    steps_enabled: true,
+    profile_enabled: true,
     greeting_morning: "Bom dia 👋",
     greeting_afternoon: "Boa tarde 👋",
     greeting_evening: "Boa noite 👋",
