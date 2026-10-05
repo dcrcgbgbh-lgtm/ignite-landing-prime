@@ -93,7 +93,7 @@ async function attachCouponUsage(db: AdminClient, settings: SiteSettings): Promi
       const { count } = await db
         .from("visitor_events")
         .select("id", { count: "exact", head: true })
-        .eq("event_type", "coupon_applied")
+        .eq("event_type", "coupon_redeemed")
         .contains("metadata", { coupon_id: coupon.id });
       return { ...coupon, used_count: count ?? 0 };
     }),
@@ -138,10 +138,38 @@ export const recordCouponApplied = createServerFn({ method: "POST" })
     );
     if (!coupon) throw new Error("Cupom inválido ou desativado.");
 
+    // O cupom fica reservado para esta sessão até a compra ser confirmada.
+    // Depois que a compra é confirmada (coupon_redeemed), a mesma sessão
+    // pode usar o mesmo cupom novamente em uma nova compra.
+    const { data: pendingRows } = await db
+      .from("visitor_events")
+      .select("id, created_at")
+      .eq("session_id", data.sessionId)
+      .eq("event_type", "coupon_applied")
+      .contains("metadata", { coupon_id: coupon.id, plan_id: coupon.plan_id })
+      .order("created_at", { ascending: false })
+      .limit(20);
+
+    if ((pendingRows ?? []).length > 0) {
+      const latestApplied = pendingRows![0];
+      const { count: redeemedAfter } = await db
+        .from("visitor_events")
+        .select("id", { count: "exact", head: true })
+        .eq("session_id", data.sessionId)
+        .eq("event_type", "coupon_redeemed")
+        .contains("metadata", { coupon_id: coupon.id })
+        .gt("created_at", latestApplied.created_at);
+
+      if ((redeemedAfter ?? 0) === 0) {
+        throw new Error("Este cupom já foi aplicado nesta compra. Finalize o pagamento antes de usar novamente.");
+      }
+    }
+
+    // O limite de usos conta somente compras confirmadas.
     const { count } = await db
       .from("visitor_events")
       .select("id", { count: "exact", head: true })
-      .eq("event_type", "coupon_applied")
+      .eq("event_type", "coupon_redeemed")
       .contains("metadata", { coupon_id: coupon.id });
 
     const maxUses = Number(coupon.max_uses);
