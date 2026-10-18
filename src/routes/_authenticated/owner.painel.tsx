@@ -203,16 +203,16 @@ function PainelPage() {
     const nextCode = prev !== nextPct ? oldCode.replace(/\d+$/, String(nextPct)) : oldCode;
     const replacePercent = (value: string) => value
       .split(oldCode).join(nextCode)
-      .replace(/(Cupom de )\d+(% OFF)/gi, \`$1\${nextPct}$2\`)
-      .replace(/(receba )\d+(% de desconto)/gi, \`$1\${nextPct}$2\`)
-      .replace(/(^|\D)\d+%/g, \`$1\${nextPct}%\`);
+      .replace(/(Cupom de )\d+(% OFF)/gi, "$1" + nextPct + "$2")
+      .replace(/(receba )\d+(% de desconto)/gi, "$1" + nextPct + "$2")
+      .replace(/(^|\D)\d+%/g, "$1" + nextPct + "%");
     const coupons = [...s.coupons];
     coupons[idx] = {
       ...current,
       discount_percent: nextPct,
       code: nextCode,
-      name: replacePercent(current.name || \`Cupom de \${prev}% OFF\`),
-      display_text: replacePercent(current.display_text || \`Use o cupom \${oldCode} e receba \${prev}% de desconto.\`),
+      name: replacePercent(current.name || "Cupom de " + prev + "% OFF"),
+      display_text: replacePercent(current.display_text || "Use o cupom " + oldCode + " e receba " + prev + "% de desconto."),
     };
     patch("coupons", coupons);
   };
