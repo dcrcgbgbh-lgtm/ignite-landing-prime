@@ -376,15 +376,15 @@ export const getCouponUsage = createServerFn({ method: "POST" })
     const coupons = Array.isArray(settingRow?.value) ? settingRow.value as Record<string, unknown>[] : [];
     const usage: Record<string, number> = {};
     for (const coupon of coupons) {
-      const couponId = String(coupon.id ?? "");
+      const couponId = String(coupon['id'] ?? "");
       if (!couponId) continue;
       let query = db
         .from("visitor_events")
         .select("id", { count: "exact", head: true })
         .eq("event_type", "coupon_redeemed")
         .contains("metadata", { coupon_id: couponId });
-      const resetAt = typeof coupon.usage_reset_at === "string" && coupon.usage_reset_at
-        ? coupon.usage_reset_at
+      const resetAt = typeof coupon['usage_reset_at'] === "string" && coupon['usage_reset_at']
+        ? coupon['usage_reset_at']
         : "1970-01-01T00:00:00.000Z";
       query = query.gte("created_at", resetAt);
       const { count } = await query;
@@ -517,12 +517,12 @@ export const confirmPurchase = createServerFn({ method: "POST" })
 
       const applied = (appliedRows ?? []).find((row) => {
         const metadata = (row.metadata ?? {}) as Record<string, unknown>;
-        return String(metadata.plan_id ?? "") === String(purchase.plan_id);
+        return String(metadata['plan_id'] ?? "") === String(purchase.plan_id);
       });
 
       if (applied) {
         const metadata = (applied.metadata ?? {}) as Record<string, unknown>;
-        const couponId = String(metadata.coupon_id ?? "");
+        const couponId = String(metadata['coupon_id'] ?? "");
         if (couponId) {
           const { data: settingsRow } = await db
             .from("site_settings")
@@ -532,10 +532,10 @@ export const confirmPurchase = createServerFn({ method: "POST" })
           const rawCoupons = Array.isArray(settingsRow?.value) ? settingsRow.value : [];
           const coupon = rawCoupons.find((item) => {
             const row = item as Record<string, unknown>;
-            return String(row.id ?? "") === couponId;
+            return String(row['id'] ?? "") === couponId;
           }) as Record<string, unknown> | undefined;
 
-          const maxUses = Number(coupon?.max_uses);
+          const maxUses = Number(coupon?.['max_uses']);
           const { count } = await db
             .from("visitor_events")
             .select("id", { count: "exact", head: true })
@@ -548,9 +548,9 @@ export const confirmPurchase = createServerFn({ method: "POST" })
 
           couponRedemption = {
             coupon_id: couponId,
-            code: String(metadata.code ?? coupon?.code ?? ""),
+            code: String(metadata['code'] ?? coupon?.['code'] ?? ""),
             plan_id: String(purchase.plan_id),
-            discount_percent: Number(metadata.discount_percent ?? coupon?.discount_percent ?? 0),
+            discount_percent: Number(metadata['discount_percent'] ?? coupon?.['discount_percent'] ?? 0),
             purchase_id: purchase.id,
           };
         }
@@ -575,9 +575,9 @@ export const confirmPurchase = createServerFn({ method: "POST" })
 
     if (couponRedemption) {
       const { error: redemptionError } = await db.from("visitor_events").insert({
-        session_id: purchase.session_id,
+        session_id: purchase.session_id ?? "",
         event_type: "coupon_redeemed",
-        metadata: couponRedemption,
+        metadata: couponRedemption as never,
       });
       if (redemptionError) {
         await db
@@ -589,7 +589,7 @@ export const confirmPurchase = createServerFn({ method: "POST" })
     }
 
     await audit(db, userId, "confirm_purchase", `purchase:${data.id}`, {
-      coupon_id: couponRedemption?.coupon_id ?? null,
+      coupon_id: couponRedemption?.["coupon_id"] ?? null,
     });
     return { ok: true, couponUsed: Boolean(couponRedemption) };
   });
