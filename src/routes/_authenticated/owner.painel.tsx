@@ -194,22 +194,223 @@ function PainelPage() {
     patch("coupons", coupons);
   };
 
-  // Ao mudar o percentual, atualiza código/nome/texto que seguem o padrão do percentual anterior.
+  // Mantém código, nome e texto coerentes com o percentual configurado.
   const updateCouponPercent = (idx: number, nextPct: number) => {
     const current = s.coupons[idx];
     if (!current) return;
     const prev = Number(current.discount_percent) || 0;
-    const swapCode = (code: string) => code.replace(new RegExp(`${prev}$`), String(nextPct));
-    const nextCode = prev !== nextPct ? swapCode(current.code) : current.code;
-    const swapText = (t: string) =>
-      t.split(current.code).join(nextCode).replace(new RegExp(`(^|\\D)${prev}%`, "g"), `$1${nextPct}%`);
+    const oldCode = current.code;
+    const nextCode = prev !== nextPct
+      ? oldCode.replace(new RegExp(`\\d+import type { CouponConfig } from "@/lib/site-config";
+import { discountedCents, formatBrl, parseBrlCents } from "@/lib/pix-coupon";
+import { useEffect, useRef, useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { OwnerShell, Panel } from "@/components/owner/OwnerShell";
+import {
+  getAdminConfig,
+  getCouponUsage,
+  saveSetting,
+  savePlan,
+  saveBotRule,
+  deleteBotRule,
+} from "@/lib/owner.functions";
+import type { SiteSettings } from "@/lib/site-config";
+import { CheckCircle2, Loader2, Percent, Sparkles, Tag, Zap } from "lucide-react";
+
+export const Route = createFileRoute("/_authenticated/owner/painel")({
+  head: () => ({
+    meta: [
+      { title: "Painel de configuração | FF 2022 Elite" },
+      { name: "description", content: "Edite textos, vídeo, planos, Pix, FAQ e regras do bot do FF 2022 Elite." },
+      { property: "og:title", content: "Painel de configuração | FF 2022 Elite" },
+      { property: "og:description", content: "Configuração completa do site FF 2022 Elite." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { name: "robots", content: "noindex,nofollow" },
+    ],
+  }),
+  component: PainelPage,
+});
+
+type Config = Awaited<ReturnType<typeof getAdminConfig>>;
+type Row = Record<string, unknown>;
+
+const TABS = ["Hero", "Acesso e vídeo", "Bot", "Regras", "Planos", "FAQ", "Seções", "Chat", "Auditoria", "Suporte", "Cupom"] as const;
+
+function Field({
+  label,
+  value,
+  onChange,
+  textarea,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  textarea?: boolean;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-xs text-muted-foreground">{label}</span>
+      {textarea ? (
+        <textarea
+          value={value}
+          rows={4}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full resize-y rounded-xl border border-border/60 bg-card/50 px-3 py-2.5 text-sm outline-none focus:border-primary/60"
+        />
+      ) : (
+        <input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full rounded-xl border border-border/60 bg-card/50 px-3 py-2.5 text-sm outline-none focus:border-primary/60"
+        />
+      )}
+    </label>
+  );
+}
+
+function PainelPage() {
+  const [cfg, setCfg] = useState<Config | null>(null);
+  const [tab, setTab] = useState<(typeof TABS)[number]>("Hero");
+  const [msg, setMsg] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [couponSync, setCouponSync] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [couponUsage, setCouponUsage] = useState<Record<string, number>>({});
+  const couponHydrated = useRef(false);
+  const couponSaveTimer = useRef<number | null>(null);
+
+  const load = async () => {
+    try {
+      setCfg(await getAdminConfig());
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "Falha ao carregar.");
+    }
+  };
+
+  useEffect(() => {
+    void load();
+  }, []);
+
+  useEffect(() => {
+    if (!cfg || tab !== "Cupom") return;
+    let alive = true;
+    const refreshUsage = async () => {
+      try {
+        const res = await getCouponUsage();
+        if (alive) setCouponUsage(res.usage);
+      } catch {
+        // A falha de métricas não bloqueia a edição dos cupons.
+      }
+    };
+    void refreshUsage();
+    const timer = window.setInterval(refreshUsage, 2000);
+    return () => {
+      alive = false;
+      window.clearInterval(timer);
+    };
+  }, [cfg, tab]);
+
+  useEffect(() => {
+    if (!cfg) return;
+    if (!couponHydrated.current) {
+      couponHydrated.current = true;
+      return;
+    }
+    if (tab !== "Cupom") return;
+    if (couponSaveTimer.current) window.clearTimeout(couponSaveTimer.current);
+    setCouponSync("saving");
+    couponSaveTimer.current = window.setTimeout(async () => {
+      try {
+        await saveSetting({
+          data: {
+            key: "coupons",
+            value: cfg.settings.coupons as unknown as Record<string, unknown>,
+          },
+        });
+        setCouponSync("saved");
+      } catch {
+        setCouponSync("error");
+      }
+    }, 700);
+    return () => {
+      if (couponSaveTimer.current) window.clearTimeout(couponSaveTimer.current);
+    };
+  }, [cfg?.settings.coupons, tab]);
+
+  if (!cfg) {
+    return (
+      <OwnerShell title="Painel">
+        {msg ? (
+          <p className="rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm">{msg}</p>
+        ) : (
+          <div className="grid place-items-center py-16 text-muted-foreground">
+            <Loader2 className="animate-spin" />
+          </div>
+        )}
+      </OwnerShell>
+    );
+  }
+
+  const s = cfg.settings;
+  const patch = <K extends keyof SiteSettings>(key: K, value: SiteSettings[K]) =>
+    setCfg({ ...cfg, settings: { ...s, [key]: value } });
+
+  const persist = async (key: keyof SiteSettings) => {
+    setBusy(true);
+    setMsg(null);
+    try {
+      await saveSetting({ data: { key: key as string, value: s[key] as unknown as Record<string, unknown> } });
+      setMsg("Salvo com sucesso.");
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "Falha ao salvar.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const SaveBtn = ({ onClick }: { onClick: () => void }) => (
+    <button
+      onClick={onClick}
+      disabled={busy}
+      className="btn-glow rounded-xl px-4 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-60"
+      style={{ background: "var(--gradient-primary)" }}
+    >
+      Salvar
+    </button>
+  );
+
+  const updatePlan = (idx: number, key: string, value: unknown) => {
+    const plans = [...cfg.plans] as Row[];
+    plans[idx] = { ...(plans[idx] as Row), [key]: value };
+    setCfg({ ...cfg, plans: plans as Config["plans"] });
+  };
+
+  const updateRule = (idx: number, key: string, value: unknown) => {
+    const rules = [...cfg.rules] as Row[];
+    rules[idx] = { ...(rules[idx] as Row), [key]: value };
+    setCfg({ ...cfg, rules: rules as Config["rules"] });
+  };
+
+  const updateCoupon = (idx: number, key: string, value: unknown) => {
+    const coupons = [...s.coupons];
+    coupons[idx] = { ...(coupons[idx] as CouponConfig), [key]: value } as CouponConfig;
+    patch("coupons", coupons);
+  };
+
+), String(nextPct))
+      : oldCode;
+    const replacePercent = (value: string) => value
+      .split(oldCode).join(nextCode)
+      .replace(/(Cupom de )\\d+(% OFF)/gi, `$1${nextPct}$2`)
+      .replace(/(receba )\\d+(% de desconto)/gi, `$1${nextPct}$2`)
+      .replace(/(^|\\D)\\d+%/g, `$1${nextPct}%`);
     const coupons = [...s.coupons];
     coupons[idx] = {
       ...current,
       discount_percent: nextPct,
       code: nextCode,
-      name: prev !== nextPct ? swapText(current.name) : current.name,
-      display_text: prev !== nextPct ? swapText(current.display_text) : current.display_text,
+      name: replacePercent(current.name || `Cupom de ${prev}% OFF`),
+      display_text: replacePercent(current.display_text || `Use o cupom ${oldCode} e receba ${prev}% de desconto.`),
     };
     patch("coupons", coupons);
   };
@@ -841,10 +1042,15 @@ function PainelPage() {
                       </label>
                       <Field label="Código do cupom" value={coupon.code} onChange={(v) => updateCoupon(i, "code", v.toUpperCase().replace(/\s+/g, ""))} />
                       <Field label="Nome do cupom" value={coupon.name} onChange={(v) => updateCoupon(i, "name", v)} />
+                      <p className="text-xs text-muted-foreground" aria-label="Prévia do nome do cupom">
+                        {coupon.name.split(/(\\d+%?)/g).map((part, partIndex) =>
+                          /\\d+%?/.test(part) ? <span key={partIndex} className="font-bold text-red-500">{part}</span> : <span key={partIndex}>{part}</span>
+                        )}
+                      </p>
                       <Field
                         label="Desconto (%)"
                         value={String(coupon.discount_percent)}
-                        onChange={(v) => updateCoupon(i, "discount_percent", Math.min(100, Math.max(0, Number(v) || 0)))}
+                        onChange={(v) => updateCouponPercent(i, Math.min(100, Math.max(0, Math.round(Number(v) || 0))))}
                       />
                       {(() => {
                         const plan = (cfg.plans as Row[]).find((p) => String(p["id"]) === coupon.plan_id);
@@ -867,6 +1073,11 @@ function PainelPage() {
                       })()}
                       <div className="sm:col-span-2">
                         <Field label="Texto mostrado ao cliente" value={coupon.display_text} onChange={(v) => updateCoupon(i, "display_text", v)} />
+                        <p className="text-xs text-muted-foreground" aria-label="Prévia do texto mostrado ao cliente">
+                          {coupon.display_text.split(/(\\d+%?)/g).map((part, partIndex) =>
+                            /\\d+%?/.test(part) ? <span key={partIndex} className="font-bold text-red-500">{part}</span> : <span key={partIndex}>{part}</span>
+                          )}
+                        </p>
                       </div>
                       <label className="block">
                         <span className="mb-1 block text-xs text-muted-foreground">Limite de usos</span>
