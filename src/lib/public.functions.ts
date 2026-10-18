@@ -148,7 +148,7 @@ export const getPendingCoupon = createServerFn({ method: "POST" })
         .eq("session_id", data.sessionId)
         .eq("event_type", "coupon_redeemed")
         .contains("metadata", { coupon_id: coupon.id })
-        .gt("created_at", latestApplied?.created_at ?? "1970-01-01T00:00:00.000Z");
+        .gt("created_at", latestApplied.created_at);
 
       if ((redeemedAfter ?? 0) === 0) {
         return {
@@ -206,7 +206,7 @@ export const recordCouponApplied = createServerFn({ method: "POST" })
         .eq("session_id", data.sessionId)
         .eq("event_type", "coupon_redeemed")
         .contains("metadata", { coupon_id: coupon.id })
-        .gt("created_at", latestApplied?.created_at ?? "1970-01-01T00:00:00.000Z");
+        .gt("created_at", latestApplied.created_at);
 
       if ((redeemedAfter ?? 0) === 0) {
         throw new Error("Este cupom já foi aplicado nesta compra. Finalize o pagamento antes de usar novamente.");
