@@ -32,7 +32,7 @@ export const Route = createFileRoute("/_authenticated/owner/painel")({
 type Config = Awaited<ReturnType<typeof getAdminConfig>>;
 type Row = Record<string, unknown>;
 
-const TABS = ["Hero", "Acesso e vídeo", "Bot", "Regras", "Planos", "FAQ", "Seções", "Chat", "Auditoria", "Suporte", "Cupom"] as const;
+const TABS = ["Hero", "Acesso e vídeo", "Bot", "Regras", "Planos", "FAQ", "Seções", "Chat", "Auditoria", "Suporte", "Cupom", "Destaques"] as const;
 
 function Field({
   label,
@@ -962,6 +962,28 @@ function PainelPage() {
               ))}
             </div>
             <p className="text-xs text-muted-foreground">Canais com URL vazia não aparecem no site, mesmo ativos.</p>
+          </div>
+        </Panel>
+      )}
+
+      {tab === "Destaques" && (
+        <Panel title="Mensagem de descontos" actions={<SaveBtn onClick={() => void persist("promo")} />}>
+          <div className="space-y-4">
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={s.promo.enabled} onChange={(e) => patch("promo", { ...s.promo, enabled: e.target.checked })} />
+              Mostrar destaque de cupons no site
+            </label>
+            <Field label="Texto pequeno acima do título" value={s.promo.eyebrow} onChange={(v) => patch("promo", { ...s.promo, eyebrow: v })} />
+            <Field label="Título principal" value={s.promo.title} onChange={(v) => patch("promo", { ...s.promo, title: v })} />
+            <Field label="Descrição" value={s.promo.description} onChange={(v) => patch("promo", { ...s.promo, description: v })} textarea />
+            <Field label="Texto do botão" value={s.promo.button_label} onChange={(v) => patch("promo", { ...s.promo, button_label: v })} />
+            <div className="rounded-2xl border border-red-500/30 bg-red-500/5 p-5">
+              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-red-500">{s.promo.eyebrow}</p>
+              <h3 className="mt-2 text-xl font-black">{s.promo.title}</h3>
+              <p className="mt-2 text-sm text-muted-foreground">{s.promo.description}</p>
+              <span className="mt-4 inline-flex rounded-xl bg-red-600 px-4 py-2 text-xs font-bold text-white">{s.promo.button_label}</span>
+            </div>
+            <p className="text-xs text-muted-foreground">Edite a mensagem aqui e salve. Ela aparece no site e pode ser desativada sem mexer nos cupons cadastrados.</p>
           </div>
         </Panel>
       )}
