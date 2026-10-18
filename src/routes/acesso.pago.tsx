@@ -78,6 +78,7 @@ function AcessoPagoPage() {
   };
 
   const access = (settings ?? defaultSettings).access;
+  const promo = (settings ?? defaultSettings).promo;
 
   return (
     <AccessShell siteName={settings?.branding.site_name}>
@@ -99,6 +100,22 @@ function AcessoPagoPage() {
         </div>
       ) : (
         <>
+          {promo.enabled && (
+            <Reveal delay={80} className="mt-8">
+              <section className="relative overflow-hidden rounded-3xl border border-primary/40 bg-gradient-to-br from-primary/15 via-card to-card p-6 shadow-[var(--shadow-glow)] sm:p-8">
+                <div className="pointer-events-none absolute -right-10 -top-12 size-40 rounded-full bg-primary/15 blur-3xl" />
+                <div className="relative">
+                  <p className="text-[10px] font-extrabold uppercase tracking-[0.28em] text-primary-glow">{promo.eyebrow}</p>
+                  <h2 className="mt-2 font-display text-2xl font-extrabold sm:text-3xl">{promo.title}</h2>
+                  <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">{promo.description}</p>
+                  <button type="button" onClick={() => document.getElementById("planos-disponiveis")?.scrollIntoView({ behavior: "smooth", block: "start" })} className="mt-5 rounded-xl px-5 py-3 text-xs font-extrabold tracking-wide transition-transform hover:scale-[1.02]" style={{ background: "var(--gradient-primary)", color: "var(--primary-foreground)" }}>
+                    {promo.button_label}
+                  </button>
+                </div>
+              </section>
+            </Reveal>
+          )}
+
           <Reveal delay={120} className="mt-10">
             <AccessVideoCard access={access} />
           </Reveal>
@@ -113,7 +130,7 @@ function AcessoPagoPage() {
             <SupportLinks support={settings.support} className="mt-6" />
           )}
 
-          <div className="mt-10 flex flex-col gap-6">
+          <div id="planos-disponiveis" className="mt-10 flex flex-col gap-6">
             {plans.map((plan, i) => (
               <Reveal key={plan.id} delay={i * 100}>
                 <article
