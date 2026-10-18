@@ -64,6 +64,7 @@ export type CouponConfig = {
 export type SectionsSettings = Record<string, boolean>;
 
 export type BrandingSettings = { site_name: string };
+export type PromoSettings = { enabled: boolean; eyebrow: string; title: string; description: string; button_label: string };
 export type ChatSettings = { enabled: boolean; closed_message: string };
 export type SupportSettings = {
   whatsapp_url: string; whatsapp_label: string; whatsapp_enabled: boolean;
@@ -77,6 +78,7 @@ export type SiteSettings = {
   chat: ChatSettings;
   support: SupportSettings;
   coupons: CouponConfig[];
+  promo: PromoSettings;
   hero: HeroSettings;
   access: AccessSettings;
   free_access: FreeAccessSettings;
@@ -99,6 +101,13 @@ export const defaultSettings: SiteSettings = {
     show_in_free_access: true, show_in_paid_access: true, show_in_chat: true,
   },
   coupons: [],
+  promo: {
+    enabled: true,
+    eyebrow: "OFERTA ESPECIAL",
+    title: "Use um cupom e economize",
+    description: "Aplique seu cupom no checkout e aproveite seu desconto exclusivo antes de finalizar a compra.",
+    button_label: "VER PLANOS E DESCONTOS",
+  },
   hero: {
     title: "FF 2022 Elite",
     subtitle: "O software mais estável, atualizado e completo.",
