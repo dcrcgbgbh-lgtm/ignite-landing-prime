@@ -122,45 +122,7 @@ export const getPendingCoupon = createServerFn({ method: "POST" })
     if (!input?.planId) throw new Error("Plano inválido.");
     return input;
   })
-  .handler(async ({ data }) => {
-    const db = await admin();
-    const settings = await loadSettings(db);
-    const coupons = settings.coupons.filter((c) => c.enabled && c.plan_id === data.planId);
-
-    for (const coupon of coupons) {
-      const resetAt = coupon.usage_reset_at || "1970-01-01T00:00:00.000Z";
-      const { data: appliedRows } = await db
-        .from("visitor_events")
-        .select("created_at, metadata")
-        .eq("session_id", data.sessionId)
-        .eq("event_type", "coupon_applied")
-        .contains("metadata", { coupon_id: coupon.id, plan_id: coupon.plan_id })
-        .gte("created_at", resetAt)
-        .order("created_at", { ascending: false })
-        .limit(1);
-
-      const latestApplied = appliedRows?.[0];
-      if (!latestApplied) continue;
-
-      const { count: redeemedAfter } = await db
-        .from("visitor_events")
-        .select("id", { count: "exact", head: true })
-        .eq("session_id", data.sessionId)
-        .eq("event_type", "coupon_redeemed")
-        .contains("metadata", { coupon_id: coupon.id })
-        .gt("created_at", latestApplied.created_at);
-
-      if ((redeemedAfter ?? 0) === 0) {
-        return {
-          pending: true,
-          coupon,
-          message: "Este cupom já foi aplicado nesta compra. Finalize o pagamento antes de usar novamente.",
-        };
-      }
-    }
-
-    return { pending: false, coupon: null, message: null };
-  });
+  .handler(async () => ({ pending: false, coupon: null, message: null }));
 
 export const recordCouponApplied = createServerFn({ method: "POST" })
   .inputValidator((input: {
@@ -184,34 +146,6 @@ export const recordCouponApplied = createServerFn({ method: "POST" })
         c.code.trim().toUpperCase() === data.code.trim().toUpperCase(),
     );
     if (!coupon) throw new Error("Cupom inválido ou desativado.");
-
-    // O cupom fica reservado para esta sessão até a compra ser confirmada.
-    // Depois que a compra é confirmada (coupon_redeemed), a mesma sessão
-    // pode usar o mesmo cupom novamente em uma nova compra.
-    const { data: pendingRows } = await db
-      .from("visitor_events")
-      .select("id, created_at")
-      .eq("session_id", data.sessionId)
-      .eq("event_type", "coupon_applied")
-      .contains("metadata", { coupon_id: coupon.id, plan_id: coupon.plan_id })
-      .gte("created_at", coupon.usage_reset_at || "1970-01-01T00:00:00.000Z")
-      .order("created_at", { ascending: false })
-      .limit(20);
-
-    if ((pendingRows ?? []).length > 0) {
-      const latestApplied = pendingRows![0];
-      const { count: redeemedAfter } = await db
-        .from("visitor_events")
-        .select("id", { count: "exact", head: true })
-        .eq("session_id", data.sessionId)
-        .eq("event_type", "coupon_redeemed")
-        .contains("metadata", { coupon_id: coupon.id })
-        .gt("created_at", latestApplied.created_at);
-
-      if ((redeemedAfter ?? 0) === 0) {
-        throw new Error("Este cupom já foi aplicado nesta compra. Finalize o pagamento antes de usar novamente.");
-      }
-    }
 
     // O limite de usos conta somente compras confirmadas.
     const { count } = await db
