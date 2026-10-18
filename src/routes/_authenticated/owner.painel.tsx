@@ -194,6 +194,26 @@ function PainelPage() {
     patch("coupons", coupons);
   };
 
+  // Ao mudar o percentual, atualiza código/nome/texto que seguem o padrão do percentual anterior.
+  const updateCouponPercent = (idx: number, nextPct: number) => {
+    const current = s.coupons[idx];
+    if (!current) return;
+    const prev = Number(current.discount_percent) || 0;
+    const swapCode = (code: string) => code.replace(new RegExp(`${prev}$`), String(nextPct));
+    const nextCode = prev !== nextPct ? swapCode(current.code) : current.code;
+    const swapText = (t: string) =>
+      t.split(current.code).join(nextCode).replace(new RegExp(`(^|\\D)${prev}%`, "g"), `$1${nextPct}%`);
+    const coupons = [...s.coupons];
+    coupons[idx] = {
+      ...current,
+      discount_percent: nextPct,
+      code: nextCode,
+      name: prev !== nextPct ? swapText(current.name) : current.name,
+      display_text: prev !== nextPct ? swapText(current.display_text) : current.display_text,
+    };
+    patch("coupons", coupons);
+  };
+
   const addCoupon = () => {
     patch("coupons", [
       ...s.coupons,
