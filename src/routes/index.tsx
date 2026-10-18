@@ -564,6 +564,25 @@ function Index() {
       )}
 
 
+      {/* DESTAQUE DE CUPONS */}
+      {effectiveSettings.promo.enabled && (
+        <section className="relative z-10 px-5 py-10">
+          <Reveal>
+            <div className="glass mx-auto flex w-[min(1180px,100%)] flex-col items-start gap-5 overflow-hidden rounded-3xl border border-red-500/25 p-7 sm:flex-row sm:items-center sm:justify-between sm:p-10" style={{ background: "linear-gradient(115deg, oklch(0.18 0.04 26.5 / 0.96), oklch(0.13 0.02 20 / 0.96))", boxShadow: "0 18px 60px oklch(0.45 0.2 26.5 / 0.12)" }}>
+              <div className="max-w-2xl">
+                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-red-400">{effectiveSettings.promo.eyebrow}</p>
+                <h2 className="mt-2 font-display text-2xl font-black sm:text-3xl">{effectiveSettings.promo.title}</h2>
+                <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">{effectiveSettings.promo.description}</p>
+              </div>
+              <Link to="/acesso" className="glow-hover inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-red-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-red-500">
+                <span className="rounded bg-white/15 px-1.5 py-0.5 text-xs font-black">USE</span>
+                {effectiveSettings.promo.button_label}
+              </Link>
+            </div>
+          </Reveal>
+        </section>
+      )}
+
       {/* CTA FINAL */}
       <section className="relative z-10 px-5 pb-24">
         <Reveal>
