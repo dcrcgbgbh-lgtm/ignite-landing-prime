@@ -1,4 +1,5 @@
 import type { CouponConfig } from "@/lib/site-config";
+import { discountedCents, formatBrl, parseBrlCents } from "@/lib/pix-coupon";
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { OwnerShell, Panel } from "@/components/owner/OwnerShell";
@@ -825,6 +826,25 @@ function PainelPage() {
                         value={String(coupon.discount_percent)}
                         onChange={(v) => updateCoupon(i, "discount_percent", Math.min(100, Math.max(0, Number(v) || 0)))}
                       />
+                      {(() => {
+                        const plan = (cfg.plans as Row[]).find((p) => String(p["id"]) === coupon.plan_id);
+                        const baseCents = plan ? parseBrlCents(String(plan["price"] ?? "")) : 0;
+                        const pct = Math.min(100, Math.max(0, Number(coupon.discount_percent) || 0));
+                        return (
+                          <div className="sm:col-span-2 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-primary/30 bg-primary/5 px-3 py-2.5 text-sm">
+                            {baseCents > 0 ? (
+                              <>
+                                <span className="text-muted-foreground">
+                                  {String(plan?.["name"] ?? coupon.plan_id)} · <span className="line-through">R$ {formatBrl(baseCents)}</span> · {pct}% OFF
+                                </span>
+                                <span className="font-black text-primary-glow">Preço final: R$ {formatBrl(discountedCents(baseCents, pct))}</span>
+                              </>
+                            ) : (
+                              <span className="text-muted-foreground">Preço do plano não encontrado — defina o preço na aba de planos para ver o valor final.</span>
+                            )}
+                          </div>
+                        );
+                      })()}
                       <div className="sm:col-span-2">
                         <Field label="Texto mostrado ao cliente" value={coupon.display_text} onChange={(v) => updateCoupon(i, "display_text", v)} />
                       </div>
